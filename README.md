@@ -1,2 +1,2 @@
 # shared-docs
-Publicly shareable Daava specifications and product documentation for external reviewers
+Shareable Daava specifications and product documentation for reviewers
