@@ -9,6 +9,7 @@ Shareable Daava specifications and product documentation for reviewers.
 | Document | Covers |
 | --- | --- |
 | [`docs/dental-insurance-claims-specification.md`](./docs/dental-insurance-claims-specification.md) | End-to-end dental insurance and claims lifecycle — intake and coverage triage, EDI 270/271 eligibility, Open Dental write-back, clinical sign-off, AI CDT scrubbing, human-in-the-loop EDI 837D transmission, and STAX balance reconciliation. Includes a seven-phase Mermaid decision tree. |
+| [`docs/clinic-uat-handout.md`](./docs/clinic-uat-handout.md) | Clinic UAT run sheet and acceptance. Manual intake email, chart update, and tablet kiosk, with hard blockers on each test and sign-off for Jaime Kirk, Carlos Lopez, and Opal Anderson. |
 
 ---
 
