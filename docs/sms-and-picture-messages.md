@@ -31,7 +31,7 @@ They show up in the same conversation on the patient's phone. They travel on dif
 flowchart TD
   Q{"What has to arrive?"}
   Q -->|"Words, a link, or a reply like C"| SMS["SMS"]
-  Q -->|"A file in the thread"| MMS["MMS"]
+  Q -->|"A file, or a long text"| MMS["MMS"]
   SMS --> LAND["Arrives with mobile data off"]
   MMS --> DATA{"Cellular data on?"}
   DATA -->|Yes| FILE["The file is in the thread"]
@@ -45,6 +45,10 @@ flowchart TD
   class SMS,MMS,BACK actionNode
   class LAND,FILE cleanNode
 ```
+
+A long text does not have to be an SMS, and it does not have to include a file. AWS sends a text-only MMS by leaving the file off the media call. That message holds up to 1,600 characters, from any character set, and it is one part. SMS is the kind that gets broken up. Past 160 characters an SMS splits into pieces of 153, and the phone usually puts those pieces back together into one bubble. The split still counts for the bill and for the 3-per-second cap.
+
+iPhones and Android phones both show an MMS in the normal texting app, as long as the plan allows it and cellular data is on. On an iPhone it arrives in the green-bubble thread, because a toll-free is not an iMessage sender. A basic phone, or a smartphone with data off, cannot fetch it. AWS says a long text sent as MMS to a phone that cannot receive MMS is redirected to SMS, and that SMS can then split. A file has nothing to redirect to, so the backup for a picture is the SMS that carries the link.
 
 ---
 
@@ -121,7 +125,7 @@ If an MMS fails, or the office's text route drops, the fallback from the other r
 
 SMS and MMS are two kinds of message. They are not two products, and they do not need two numbers.
 
-A toll-free that is allowed to send both can send a reminder as SMS in the morning and a promotion image as MMS that afternoon. The patient sees one conversation, from one number. A reply of C comes back as SMS into that same conversation. The inbox is one thread per patient per number. The template decides which kind goes out: no file means SMS, a file means MMS.
+A toll-free that is allowed to send both can send a reminder as SMS in the morning and a promotion image as MMS that afternoon. The patient sees one conversation, from one number. A reply of C comes back as SMS into that same conversation. The inbox is one thread per patient per number. The template decides which kind goes out. A short text goes as SMS. A file, or a text long enough to be worth one MMS instead of three SMS pieces, goes as MMS. A file is not required for that long text.
 
 ```mermaid
 flowchart TD
@@ -219,8 +223,8 @@ Nothing clinical goes in either one. A text and a picture are both readable on a
 Checked 11/20/2026.
 
 - [MMS vs. SMS and AWS MMS guide](https://docs.google.com/document/d/13mVnaKqz_W9B68DCmsRI6tNhBxUxAY1n2moa8fjpEXY). The channel differences, the three-piece cost break, link previews, and the AWS send limits. The prices in section 2 are that doc's list rates.
-- [AWS: MMS file types and size](https://docs.aws.amazon.com/sms-voice/latest/userguide/mms-limitations-character.html) and [sending an MMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/send-mms-message.html)
+- [AWS: MMS file types and size](https://docs.aws.amazon.com/sms-voice/latest/userguide/mms-limitations-character.html) (1,600 characters, not split) and [sending an MMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/send-mms-message.html) (a text-only MMS is sent by leaving the file off)
 - [AWS: throughput](https://docs.aws.amazon.com/sms-voice/latest/userguide/sms-limitations-mps.html) (an MMS is one part, 3 a second on a toll-free)
-- [AWS: How to send MMS](https://aws.amazon.com/blogs/messaging-and-targeting/how-to-send-mms-using-aws-end-user-messaging/) (no inbound pictures; numbers bought after May 2024 include MMS) and [two-way SMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/two-way-sms.html) ("Two-way MMS is not supported, but your phone number can still receive incoming SMS messages in response to an outbound MMS message.")
+- [AWS: How to send MMS](https://aws.amazon.com/blogs/messaging-and-targeting/how-to-send-mms-using-aws-end-user-messaging/) (no inbound pictures; numbers bought after May 2024 include MMS; a long text MMS sent to a phone that cannot receive MMS is redirected to SMS) and [two-way SMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/two-way-sms.html) ("Two-way MMS is not supported, but your phone number can still receive incoming SMS messages in response to an outbound MMS message.")
 - [Telnyx: receive SMS and MMS](https://developers.telnyx.com/docs/messaging/messages/receive-message) (one webhook, the notice says SMS or MMS, media links last 30 days) and [MMS media limits](https://developers.telnyx.com/docs/messaging/messages/mms-transcoding) (US and Canada toll-free, long code, and short code; download the file on arrival)
 - [Bandwidth: toll-free MMS FAQ](https://www.bandwidth.com/support/en/articles/12823248-toll-free-mms-faq) (same locations send and receive, including a hosted toll-free; STOP is shared; outbound files up to 525 KB) and [webhooks](https://dev.bandwidth.com/docs/messaging/webhooks/) (one inbound hook, channel is SMS or MMS, download media within 2 days)
