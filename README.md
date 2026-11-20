@@ -10,7 +10,7 @@ Shareable Daava specifications and product documentation for reviewers.
 | --- | --- |
 | [`docs/dental-insurance-claims-specification.md`](./docs/dental-insurance-claims-specification.md) | End-to-end dental insurance and claims lifecycle — intake and coverage triage, EDI 270/271 eligibility, Open Dental write-back, clinical sign-off, AI CDT scrubbing, human-in-the-loop EDI 837D transmission, and STAX balance reconciliation. Includes a seven-phase Mermaid decision tree. |
 | [`docs/office-number-texting-report.md`](./docs/office-number-texting-report.md) | How Daava could text from each practice's own phone number. Suggests starting on one toll-free, then reviewing each office number, with a fallback to the toll-free and then email. Includes vendors, step-by-step setup with published lead times, the engineering work, and open questions. |
-| [`docs/sms-and-picture-messages.md`](./docs/sms-and-picture-messages.md) | How to choose a plain text, a link, or a picture message. Covers the 160-character count, the Invisalign promotion from the 11/20/2026 call, and when AWS can send a picture. |
+| [`docs/sms-and-picture-messages.md`](./docs/sms-and-picture-messages.md) | SMS versus MMS, and where a picture message helps what Daava is building: the promotion image, a contact card, a calendar file, and a photo the patient sends back. |
 
 ---
 

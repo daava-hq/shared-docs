@@ -1,232 +1,166 @@
-# When a text should stay a text
+# SMS and MMS, and where a picture message helps
 
 - **Date:** 11/20/2026
 - **Status:** Suggestion for review. Not a build commitment.
 - **For:** Jaime Kirk, Opal Anderson, Lacey Shaw, Lauren Janowiecki, and the practice stakeholders
 - **From the call:** [Daava Meeting, 11/20/2026](https://docs.google.com/document/d/15GMaXbCfxa2gcisQ22qi7cT3efKJT85V0DcC45L8zMU) (Gemini notes and transcript)
 - **Research:** [MMS vs. SMS Message Delivery and AWS End User Messaging MMS Guide](https://docs.google.com/document/d/13mVnaKqz_W9B68DCmsRI6tNhBxUxAY1n2moa8fjpEXY)
-- **Related:** [`office-number-texting-report.md`](./office-number-texting-report.md) covers which phone number the text comes from. This guide covers what is inside the text, and [section 5](#5-office-number-vs-toll-free-vs-short-code) covers how that changes on each of the report's numbers.
+- **Related:** [`office-number-texting-report.md`](./office-number-texting-report.md) is about which number the message comes from. This guide is about the two kinds of message, and which jobs need the picture kind.
 
-On the 11/20/2026 call, Lacey asked for the sparkly Invisalign promotion to go out as a text, because patients do not read email and the ads she sees arrive as photos. Lauren asked how that fits in 160 characters once the practice name, a way to stop, and a link are included. Prem showed a composer that will hold about 300 characters, and Tanmay said a text is 160 characters a piece, so 300 is two or three texts. This is the suggested way to do that.
+Daava is trying to do what the offices already do in Solutionreach, and what they asked for on the 11/20/2026 call: reminders, a confirmation the patient can answer, an intake link, and a promotion that looks like the ad rather than another email. Those are two different kinds of phone message.
+
+**SMS** is the text. It holds 160 characters, a link, and a reply such as C. **MMS** is the message in the same thread that can carry a file, or a much longer text that does not split. Lacey asked for MMS when she asked for the glittery Invisalign creative to arrive as a photo. Tanmay was describing SMS when he said a text cannot hold an image.
+
+The suggestion is to use both, for different jobs. SMS carries the messages that have to arrive. MMS is how the picture, the contact card, the calendar file, and a photo from the patient get into that same thread.
 
 ---
 
-## 1. The suggestion
+## 1. How SMS and MMS differ
 
-Send reminders, intake links, and appointment confirmations as plain texts. Send a promotion as a plain text with one link to the page that already holds the picture. Send a picture message only for a contact card, a calendar file, or a small map.
+They show up in the same conversation on the patient's phone. They travel on different carrier systems.
+
+| | **SMS** | **MMS** |
+| :--- | :--- | :--- |
+| What it carries | Text and one link | A file, or up to 1,600 characters of text, or both |
+| How it arrives | Over the cell signal. It arrives with mobile data off. | The phone downloads the file over cellular data. Wi-Fi does not count. It fails when data is off, on older phones, and on many plans outside the US and Canada. |
+| Length | 160 characters. Past that it splits, and each extra piece holds 153. One emoji or a curly quote shrinks every piece to 70. | One message, up to 1,600 characters, with no split and no emoji penalty. |
+| A reply with a photo | Cannot. A reply is words only. | Can, on a carrier that receives MMS. AWS does not. |
+| Delivery receipt | The more reliable of the two. | Slower, and the receipt is less consistent, because the phone still has to fetch the file. |
+| Consent and STOP | Required | The same rules. A picture is not a way around them. |
 
 ```mermaid
 flowchart TD
-  Q{"What is going out?"}
-  Q -->|"Reminder, intake, or confirm"| TEXT["Plain text"]
-  Q -->|"A promotion with a picture"| LINK["Plain text, plus one link to the page"]
-  Q -->|"Contact card, calendar file, or a small map"| PIC["A picture message"]
-  TEXT --> FIT{"Fits in two texts?"}
-  LINK --> FIT
-  FIT -->|Yes| SEND["Send it"]
-  FIT -->|No| PAGE["Move the rest onto the page"]
+  Q{"What has to arrive?"}
+  Q -->|"Words, a link, or a reply like C"| SMS["SMS"]
+  Q -->|"A file in the thread"| MMS["MMS"]
+  SMS --> LAND["Arrives on the cell signal"]
+  MMS --> DATA{"Cellular data on?"}
+  DATA -->|Yes| FILE["The file is in the thread"]
+  DATA -->|No| BACK["Send the SMS with the link"]
 
   classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
   classDef cleanNode fill:#dcfce7,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
 
-  class Q,FIT decisionNode
-  class TEXT,LINK,PIC,PAGE actionNode
-  class SEND cleanNode
+  class Q,DATA decisionNode
+  class SMS,MMS,BACK actionNode
+  class LAND,FILE cleanNode
 ```
-
-A picture rides on a different carrier system than a text. The phone has to download it over cellular data. It fails when data is off, on older phones, and on many plans outside the US and Canada. A text still arrives. That is why the day-to-day messages stay texts, which is also what Tanmay said on the call: a photo inside the iPhone messaging app is iMessage, and a plain text cannot carry it.
-
-WhatsApp came up on the call and was set aside. It is not part of this suggestion.
 
 ---
 
-## 2. How the 160 characters work
+## 2. Where MMS costs less than a long text
 
-A plain text holds **160 characters**. When it runs over, the carrier splits it and each piece is **153 characters**, because a few characters are spent joining the pieces. Prem's box at about 300 characters is two pieces. A third piece is the point where the research doc's 2026 list rates say a picture message can cost less than the text. The suggestion is still to shorten the text, or move the rest onto the page, before paying for a picture.
+SMS is billed per piece. MMS is one price for the whole message. On the research doc's 2026 AWS list rates, MMS becomes the cheaper send at three SMS pieces.
 
-One emoji, one curly quote pasted from Word, or one accented character changes the whole text to a 70-character size. A 140-character reminder that was one text becomes three. The fix is a check in the composer that replaces curly quotes and dashes with plain characters and warns before an emoji is inserted. Switching those reminders to picture messages is the expensive way around the same problem.
-
-| What goes out | How it is billed, on the research doc's AWS list rates |
+| What goes out | AWS list rate in the research doc |
 | :--- | :--- |
-| One text, up to 160 plain characters | $0.0120 |
-| Two texts, up to 306 | $0.0239 |
-| Three texts, up to 459 | $0.0359 |
-| One picture message, up to 1,600 characters, with or without a file | $0.0300 |
+| 1 SMS, up to 160 plain characters | $0.0120 |
+| 2 SMS, up to 306 | $0.0239 |
+| 3 SMS, up to 459 | $0.0359 |
+| 1 MMS, up to 1,600 characters, with or without a file | $0.0300 |
 
-These are the research doc's published list rates for AWS, with carrier fees included. They are not a Daava quote. The same doc shows the switch at three texts on Telnyx as well. Twilio appears in that comparison and is outside the stack Daava uses.
+These are that doc's published list rates, carrier fees included. They are not a Daava quote. The same break shows up at three pieces on Telnyx. Twilio is in that comparison and is outside the stack Daava uses.
 
-On the call, Lauren was right that the practice name, a way to stop, and a link all have to fit. The way to stop can be the words "Reply STOP to opt out." It does not have to be a paragraph. A short link is what makes the rest fit. Prem already said the composer can shorten a link when SMS is selected. That belongs in the composer, so the person writing the text sees the short link before they send.
+The trap is a single emoji or a curly quote from Word. It turns a 140-character reminder from one SMS at $0.0120 into three at $0.0358, which already costs more than the MMS. The fix for reminders is a check in the composer that swaps curly quotes for plain ones and warns on an emoji. MMS is the right tool when the message was long on purpose, or when it has a file. It is the expensive way to rescue a short reminder.
 
 ---
 
-## 3. How to write the text
+## 3. Where MMS helps what we are building
+
+SMS does the daily work: the reminder, the intake link, and "reply C to confirm." MMS is what makes four of the things the offices asked for possible inside the text thread.
+
+| What we are trying to do | SMS | Where MMS helps |
+| :--- | :--- | :--- |
+| **Reminders and intake links** have to arrive, including when the patient's data is off | This is the send. Practice name, the point, "Reply STOP to opt out," one short link. | It does not help. A picture of a reminder fails in the cases where the text would have arrived. |
+| **A confirmation the patient can answer**, the way Solutionreach does with C | The reply word. Each office keeps its own. | A calendar file in the same message, so the phone offers to add the visit. The reply is still the SMS word. |
+| **Patients recognize the office**, which is why the office-number report starts with the practice name and ends on the office's own number | The name on the first line, and later the office number itself. | A contact card, sent once, that saves the office number in one tap. Saving it is also what lets later SMS links show a preview on iPhone. |
+| **A promotion that looks like the ad**, which Lacey asked for because patients are not in their email | A short text plus a link to the page that already has the glitter image. This is the version that reaches the whole list. | The image itself, in the thread, which is the thing she asked for. This is the MMS job. It fits a smaller send, a patient who already texts the office, or a welcome. The SMS with the link goes with it, so a phone that cannot fetch the picture still gets the offer. |
+| **Instructions that run past two texts**, such as pre-op or post-op | A link to the page. The page can be updated after the text goes out. | One MMS when the words themselves have to sit in the thread. Up to 1,600 characters, one charge, and past three SMS pieces it costs less. |
+| **A photo from the patient**, an insurance card or a picture of a concern | Cannot carry a file back. The intake page is how the photo arrives today. | The only way that photo lands in the thread. This waits until the office number is hosted on Telnyx or Bandwidth. AWS can send MMS and cannot receive one. |
 
 ```mermaid
 flowchart TD
-  A["1. Practice name on the first line"] --> B["2. The point, in plain characters"]
-  B --> C["3. Reply STOP to opt out"]
-  C --> D["4. One short link, and nothing after it"]
-  D --> E{"Over two texts?"}
-  E -->|Yes| F["Cut it, or move the rest to the page"]
-  E -->|No| G["Send"]
+  SMS["SMS does the daily work:<br/>reminder, intake link, reply C"] --> MMS["MMS adds a file the text cannot hold"]
+  MMS --> CARD["Contact card, so the office number gets saved"]
+  CARD --> CAL["Calendar file with the confirmation"]
+  CAL --> PROMO["Promotion image, with the SMS link as backup"]
+  PROMO --> PHOTO["A photo the patient sends back,<br/>once the office number is hosted"]
 
-  classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
-  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
-
-  class A,B,C,D,F actionNode
-  class E decisionNode
-  class G cleanNode
-```
-
-1. **Practice name first.** The patient should see who it is from before anything else. This matches the office-number report.
-2. **Plain characters.** No emoji, no curly quotes, no em dash. The composer should fix the quotes on the way in and warn on an emoji.
-3. **"Reply STOP to opt out."** Put it before the link. A phone will only build a preview of the link when the link is the last thing in the text, with nothing after it, and only after the patient has saved the number. The preview is a bonus for patients who already have the clinic saved. The STOP line is required either way.
-4. **One link, on a Daava domain, shortened.** One link only. The page it opens can hold the picture, the offer, and the button. The preview title on that page stays generic, such as "Complete your forms," with no patient name, no visit type, and no procedure in the title or the web address.
-5. **Stop at two texts.** If step 4 still needs a third text, cut a sentence or move it onto the page.
-
-A confirmation follows the same shape. On the call, the offices want a patient to text back C, or whatever word that office uses, and each office needs its own wording. The reply is one text. There is no second tap.
-
----
-
-## 4. The Invisalign promotion, specifically
-
-Lacey asked for the glittery creative to arrive the way an ad does, as a photo, and then agreed a link to that creative would do it. Lauren's action from the call is the right test: a short text version of that promotion, sent to Prem, with the link opening the page that already has the image.
-
-A picture of that promotion, sent as a picture message to a whole list, is a poor fit for the first version.
-
-- Speed depends on which number sends it. On the AWS toll-free, 5,000 picture messages take about 28 minutes, and a 5,000-patient picture blast on a short code is about 2 minutes. [Section 5](#5-office-number-vs-toll-free-vs-short-code) has each number.
-- The image has to be small. Carriers recompress anything large. The safe size is about 300 to 500 KB, even though AWS will accept an image up to 2 MB.
-- The same consent and STOP rules apply to a picture as to a text. A picture is not a way around them.
-- A treatment promotion is still a marketing text. It stays off the number that sends intake links once offices have their own numbers, so a STOP on the promotion does not stop an intake link. That split is in the office-number report.
-
----
-
-## 5. Office number vs. toll-free vs. short code
-
-The [office-number report](./office-number-texting-report.md) suggests three senders over time. The first is a toll-free on AWS, used now. The second is each practice's own office number, hosted on Telnyx or Bandwidth as it qualifies. The third is the short code already being provisioned, kept at most for overflow. The rules for a message are the same on all three: plain text by default, a link for a promotion, and a picture only for the three files in [section 6](#6-when-a-picture-message-is-the-right-tool). What changes is speed, file size, whether a patient can send a photo back, and how a promotion gets approved.
-
-```mermaid
-flowchart TD
-  Q{"Which number<br/>sends it?"}
-  Q -->|"Toll-free, on AWS"| TF["Texts and links now.<br/>Pictures out, none back."]
-  Q -->|"Office number, hosted"| OFF["Texts, links, and pictures.<br/>Patients can send photos back."]
-  Q -->|"Short code"| SC["Overflow blasts only.<br/>Practice name first."]
-
-  classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
   classDef cleanNode fill:#dcfce7,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
-  classDef warnNode fill:#fff3e0,stroke:#ef6c00,color:#e65100
 
-  class Q decisionNode
-  class TF actionNode
-  class OFF cleanNode
-  class SC warnNode
+  class SMS actionNode
+  class MMS,CARD,CAL,PROMO,PHOTO cleanNode
 ```
 
-| | **Toll-free on AWS** (the start) | **Office number on Telnyx or Bandwidth** (the goal) | **Short code on AWS** (overflow, if kept) |
+The promotion is the one the call spent time on, so it is worth being specific. Lauren's text version, with a short link, is the right first send: it fits the 160-character problem she raised, and it reaches phones with data off. MMS is how that same promotion becomes the photo she described, for the sends where we want the image in the thread and can accept that some phones will not fetch it. Those phones get the SMS. One message does not have to be chosen for every patient.
+
+A link preview is the in-between. A phone can show a small card for an SMS link, at SMS cost, when the link is the last thing in the text, the page is plain HTML, and the patient has already saved the number. That is a bonus for patients who saved the contact card. It is not a substitute for putting the image in the thread, because most first texts will not get the preview. The preview title stays generic. No patient name, visit type, or procedure in the title or the web address.
+
+---
+
+## 4. How this sits on the numbers in the other report
+
+The office-number report suggests a toll-free on AWS now, each office's own number as it qualifies, and the short code only as overflow. SMS works on all three. MMS does not.
+
+| MMS job | Toll-free on AWS, now | Office number, once hosted | Short code |
 | :--- | :--- | :--- | :--- |
-| **What the patient sees** | An 800-style number | The number on the practice's website | A 5- or 6-digit code |
-| **Plain text speed** | 3 parts a second | Set by the practice's 10DLC campaign | 100 parts a second |
-| **Picture speed** | 3 a second | Set by the campaign. AT&T allows up to 40 a second for a well-vetted campaign | 40 a second |
-| **5,000 one-part texts** | About 28 minutes | About 1 to 21 minutes toward AT&T, by vetting score | Under a minute |
-| **5,000 two-part texts** | About 56 minutes | About 2 to 42 minutes toward AT&T. Counts as 10,000 against the T-Mobile daily cap | About 2 minutes |
-| **5,000 pictures** | About 28 minutes | About 2 to 33 minutes toward AT&T. Counts as 5,000 against the T-Mobile daily cap | About 2 minutes |
-| **Largest safe picture** | 600 KB | 1 MB, but keep to 600 KB | 600 KB |
-| **Patient can text a photo back** | No. AWS does not receive pictures | Yes | No |
-| **What a promotion needs** | A promotion in the verification samples | A marketing or mixed campaign, ideally separate from reminders | MMS requested in the short code application |
+| Contact card, calendar file, map, promotion image | Yes, if the number's capabilities include MMS | Yes | Only if the application asked for MMS and the carriers approved the sample |
+| Photo back from the patient | No. AWS receives words only | Yes. This is the job that needs this number | No, on AWS |
+| Speed for a picture | 3 a second. About 28 minutes for 5,000 | Set by the practice's registration. A large list also counts against T-Mobile's daily cap for that business | 40 a second, and some prepaid plans never receive a short code at all |
 
-### On the toll-free
+So the contact card, the calendar file, and Lacey's image can be tried on the toll-free. The photo a patient sends back is the MMS job that waits for the office number. That matches the other report: insurance cards and clinical photos come through the intake page until Telnyx or Bandwidth is hosting the number.
 
-This is what Lauren's Invisalign test goes out on, and it is fine for it. A plain text with one link is one or two parts. AWS sends a picture as one part however long the text in it is, so on a toll-free a two-part text is slower than a picture message. That is the one place a picture is faster. It still costs more and still needs the patient's data on, so a link stays the suggestion.
+Two checks before the first MMS on the toll-free. The capabilities column in AWS has to say MMS. Numbers bought after May 2024 include it, and the capability cannot be added later. And the verification samples have to include whatever we will send. A toll-free approved for reminders and intake links is not approved for a promotion.
 
-Three things to check before the first send:
-
-1. **The toll-free has MMS turned on.** On AWS, the number's capabilities are fixed when it is bought. Numbers bought after May 2024 include MMS automatically. The capabilities column in the AWS console shows it. If it only says SMS, a picture message needs a new number, and the new number needs its own verification.
-2. **The verification samples include a promotion.** The toll-free verification asks what the number will send. If it says only reminders and intake links, a promotion is off the approved use. Add a promotion sample and the opt-in wording before sending one.
-3. **No photo comes back.** A patient who replies to the promotion with a picture loses that picture. Insurance cards and clinical photos still go through the intake page.
-
-### On the office number
-
-This is the only one of the three where the patient can text a photo back, which is the part Lacey was picturing. Telnyx and Bandwidth both carry pictures on a hosted office number, both ways. Telnyx's inbound picture links expire quickly, so each one is copied into Daava's own storage as it arrives.
-
-Two things change compared with the toll-free:
-
-- **Speed comes from the 10DLC campaign, not the number.** A well-vetted campaign can send pictures quickly. T-Mobile then caps the whole business each day, and the cap is per EIN across every vendor that business texts through. Each picture counts as one. Each part of a text counts as one, so a two-part text counts as two. An unvetted brand is held to 2,000 a day toward T-Mobile. A vetted brand gets 10,000 to 200,000, depending on its score. For a single practice this matters for a large promotion and not for daily reminders. Practices that share an EIN share the cap.
-- **A promotion needs its own campaign.** A campaign registered for appointment reminders does not cover a treatment promotion. The suggestion from the office-number report applies here: put promotions on a separate marketing campaign, ideally a separate number, so a STOP on the Invisalign text does not also stop intake links. NexHealth does the same.
-
-### On the short code
-
-The office-number report suggests keeping the short code only as overflow, and that holds for pictures too.
-
-- **Pictures on a short code are a separate carrier approval.** The application has to ask for MMS, with a sample picture. T-Mobile and Verizon then test the picture on their networks before it goes live. If the short code application in flight asked only for SMS, adding pictures is another round of carrier review.
-- **The T-Mobile prepaid problem is the same.** Patients on plans that cannot receive a short code also cannot receive a picture from one.
-- **No photo comes back.** AWS does not receive pictures on any number.
-
-Its one advantage is speed. When a promotion has to reach a whole group's list at once and the toll-free's 3-per-second cap is what is stopping it, the short code is the overflow, with the practice name on the first line.
+If an MMS fails, or the office's text route drops, the fallback from the other report should send the SMS with the link, from the toll-free and then by email. Sending the picture again from a second number does not help a phone that could not download it.
 
 ---
 
-## 6. When a picture message is the right tool
+## 5. How a message gets written
 
-Three files are worth a picture message, each once, and each with no clinical detail in it:
+**An SMS**, which is every reminder, intake link, confirmation, and the backup for a picture:
 
-| File | Why a picture helps |
-| :--- | :--- |
-| A contact card for the clinic number | The patient can save the number in one tap. Saving it is also what lets later texts show a link preview. |
-| A calendar file for the appointment | The phone can offer to add it. |
-| A small map or parking image, 500 KB or under | The patient needs it before they can open a link. |
+1. Practice name on the first line.
+2. The point, in plain characters. The composer swaps curly quotes and warns on an emoji.
+3. "Reply STOP to opt out," before the link.
+4. One short link on a Daava domain, and nothing after it.
+5. Stop at two pieces. A third piece means cut a sentence, or move it onto the page, or decide it is an MMS on purpose.
 
-Anything longer than two texts, such as pre-op instructions, belongs on a page behind one link. A picture message can carry up to 1,600 characters as a single message, and the research doc shows that can cost less than three texts. A page is still the suggestion, because it does not depend on cellular data and it can be updated after the text has gone out.
+**An MMS**, for the four jobs in [section 3](#3-where-mms-helps-what-we-are-building):
 
-**How AWS sends one, when we do send one.**
+1. The same practice name and the same STOP line. The file does not replace them.
+2. The file is a contact card, a calendar file, a map, or the promotion image. Shrink an image to 500 KB or under. Carriers recompress anything larger. AWS accepts an image up to 2 MB and other files up to 600 KB. The safe size across carriers is about 600 KB.
+3. On AWS, the file has to sit in an S3 bucket in the same account and region as the sending number. The send uses the media call, not the text call.
+4. The SMS with the link goes out whenever the picture does not land.
+5. A picture the patient sends back is copied into Daava's own storage as it arrives. On Telnyx the link in the incoming notice expires quickly.
 
-1. The file goes into an S3 bucket in the same AWS account and the same region as the sending number. AWS will not fetch a file from a public web address.
-2. The send uses the media-message call, not the plain text call. The text and the file can travel together. A picture message can also be text with no file, which is how a long text avoids being split.
-3. Shrink images to 500 KB or under before the upload.
-4. US toll-free numbers, local 10-digit numbers, and short codes can send picture messages. Canada does not get them on a toll-free.
-5. A patient can text back words. AWS cannot receive a photo. An insurance card or a clinical photo still comes through the intake page. Receiving a photo on the office number waits for Telnyx or Bandwidth, which is the other report.
-6. SMS and picture messages are covered by the AWS business associate agreement once Daava has accepted it. Voice and WhatsApp are not.
-
-A new AWS account starts in a sandbox of $1 a month for texts and $1 a month for picture messages, and only to verified destination numbers. Production access is a support request per region.
+Nothing clinical goes in either one. A text and a picture are both readable on a lock screen, and a picture can land in the patient's photo library. The diagnosis, the procedure, the clinical photo, and the filled-out form stay on the page behind the link. A STOP applies to both. Stopping the promotion stops the reminders from that same number too, which is why the other report keeps marketing off the office number once offices have their own.
 
 ---
 
-## 7. What never goes in the message
+## 6. Suggested build
 
-A text and a picture message are both readable on a lock screen, and a picture can land in the patient's photo library. The message itself carries the practice name, the time, a link, and "Reply STOP to opt out." The diagnosis, the procedure, the clinical photo, and the filled-out form stay on the page behind the link.
-
-The same STOP list covers both kinds of message. A stop on a picture message is a stop on the texts from that practice too.
-
----
-
-## 8. Suggested build
-
-These follow the actions already named on the call.
-
-1. **Shorten links inside the SMS composer.** Prem's item. The person writing the text pastes a long address and sees the short one before sending.
-2. **Count the text the way the carrier will.** Show "1 text" or "2 texts" as they type. Warn on an emoji or a curly quote. Hold the send at a third text and point them at the page.
-3. **Four templates.** Reminder. Confirmation, with the office's own reply word. Intake link. Promotion, which is a sentence plus one link.
-4. **Lauren's Invisalign text is the trial.** One practice, the test number Prem already planned to use, then the sample practice Lacey asked to click through.
-5. **Picture messages after the plain texts are reliable.** First use is a contact card for the clinic number. The promotion stays a link. Before the first one, confirm the toll-free has MMS turned on ([section 5](#5-office-number-vs-toll-free-vs-short-code)).
+1. **SMS first, in the composer Prem already showed.** A shortener, a counter that says "1 text" or "2 texts," and a warning on an emoji or a curly quote.
+2. **MMS as a choice on the same template**, for a contact card, a calendar file, a map, or the promotion image. Choosing it still sends the SMS with the link when the picture does not arrive.
+3. **Lauren's Invisalign text is the SMS trial.** Her image, sent as MMS to the test line beside that text, is the MMS trial. One practice, the test number, then the sample practice Lacey asked to click through.
+4. **The first real MMS to patients is the contact card**, sent when an office starts texting from its own number, so the number gets saved.
+5. **The inbox stores a photo only after the office number is hosted.** Until then the intake page remains the way a card or a clinical photo comes in.
 6. **Any live test stays on the test line.**
 
 ---
 
-## 9. Open questions
+## 7. Open questions
 
 | # | Question | Answer |
 | :--- | :--- | :--- |
-| 1 | Does Lauren's text version of the Invisalign promotion fit in two texts with the practice name, STOP, and one link? | |
-| 2 | Which domain do the short links use? | |
-| 3 | Should a promotion go out from the same number as intake links while every office is still on one shared number? | |
-| 4 | Is a contact card for the clinic number the first picture message, or do we wait? | |
-| 5 | Has Daava accepted the AWS business associate agreement that covers picture messages? | |
-| 6 | Does the toll-free show MMS in its capabilities, and do its verification samples include a promotion? | |
-| 7 | Did the short code application in flight ask for MMS, or only SMS? | |
-| 8 | When offices move to their own numbers, do promotions get a separate marketing campaign and number? | |
-| 9 | Which practices share an EIN, and so share one T-Mobile daily cap? | |
+| 1 | For the Invisalign promotion, do we send the SMS with the link to the list, and the MMS image to a smaller set, with the SMS as the backup? | |
+| 2 | Is the contact card the first MMS patients receive, sent when an office moves to its own number? | |
+| 3 | Should a confirmation include a calendar file? | |
+| 4 | Do photo replies wait for the hosted office number, with the intake page still there beside them? | |
+| 5 | Does the toll-free show MMS in its capabilities, and do its samples include a promotion? | |
+| 6 | Has Daava accepted the AWS business associate agreement that covers MMS? | |
 
 ---
 
@@ -234,12 +168,9 @@ These follow the actions already named on the call.
 
 Checked 11/20/2026.
 
-- [Daava Meeting, 11/20/2026](https://docs.google.com/document/d/15GMaXbCfxa2gcisQ22qi7cT3efKJT85V0DcC45L8zMU), transcript from about 00:53:59. Lacey asked for the promotion as a photo. Prem and Tanmay separated a plain text from a picture message and offered a link. Lauren asked about 160 characters, the practice name, unsubscribe, and a short link. Prem described a composer of about 300 characters and a shortener.
-- [MMS vs. SMS and AWS MMS guide](https://docs.google.com/document/d/13mVnaKqz_W9B68DCmsRI6tNhBxUxAY1n2moa8fjpEXY). Carrier behavior, the three-text cost comparison, link previews, and the AWS send steps and limits. The prices in section 2 are that doc's list rates.
-- [AWS: MMS file types and size](https://docs.aws.amazon.com/sms-voice/latest/userguide/mms-limitations-character.html)
-- [AWS: sending an MMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/send-mms-message.html)
-- [AWS: throughput](https://docs.aws.amazon.com/sms-voice/latest/userguide/sms-limitations-mps.html) (pictures: 1 a second on a US 10-digit number, 3 on a toll-free, 40 on a short code; texts: 3 on a toll-free, 100 on a short code; a picture is one part)
-- [AWS: How to send MMS](https://aws.amazon.com/blogs/messaging-and-targeting/how-to-send-mms-using-aws-end-user-messaging/) (no inbound pictures; numbers bought after May 2024 include MMS) and [requesting a phone number](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-numbers-request.html) (capabilities cannot change after purchase)
-- [Telnyx: Hosted SMS](https://developers.telnyx.com/docs/messaging/messages/hosted-sms) (texts and pictures on a hosted number), [MMS media limits](https://developers.telnyx.com/docs/messaging/messages/mms-transcoding) (size by carrier and number type; inbound links expire), and [rate limits](https://developers.telnyx.com/docs/messaging/messages/rate-limiting) (AT&T 10DLC throughput by vetting score)
-- [Twilio: T-Mobile daily limits](https://help.twilio.com/articles/1260804800549-T-Mobile-daily-message-limits-for-long-code-messaging-with-A2P-10DLC) (per EIN, across vendors; each text part and each picture counts as one). Cited for the carrier rule only.
-- [Infobip: short codes](https://www.infobip.com/docs/usa-sender-registration/short-code) and [iPost: MMS provisioning](https://help.ipost.com/sms/mms-provisioning) (short code MMS is its own approval; T-Mobile and Verizon test pictures before launch)
+- [Daava Meeting, 11/20/2026](https://docs.google.com/document/d/15GMaXbCfxa2gcisQ22qi7cT3efKJT85V0DcC45L8zMU), transcript from about 00:53:59. Lacey asked for the promotion as a photo. Prem and Tanmay separated a text from a picture and offered a link. Lauren asked about 160 characters, the practice name, unsubscribe, and a short link.
+- [MMS vs. SMS and AWS MMS guide](https://docs.google.com/document/d/13mVnaKqz_W9B68DCmsRI6tNhBxUxAY1n2moa8fjpEXY). The channel differences, the three-piece cost break, link previews, and the AWS send limits. The prices in section 2 are that doc's list rates.
+- [AWS: MMS file types and size](https://docs.aws.amazon.com/sms-voice/latest/userguide/mms-limitations-character.html) and [sending an MMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/send-mms-message.html)
+- [AWS: throughput](https://docs.aws.amazon.com/sms-voice/latest/userguide/sms-limitations-mps.html) (MMS is one part: 3 a second on a toll-free, 40 on a short code)
+- [AWS: How to send MMS](https://aws.amazon.com/blogs/messaging-and-targeting/how-to-send-mms-using-aws-end-user-messaging/) (no inbound pictures; numbers bought after May 2024 include MMS)
+- [Telnyx: Hosted SMS](https://developers.telnyx.com/docs/messaging/messages/hosted-sms) and [MMS media limits](https://developers.telnyx.com/docs/messaging/messages/mms-transcoding) (pictures both ways on a hosted office number; keep files under 600 KB)
