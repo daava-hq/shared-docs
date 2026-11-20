@@ -257,7 +257,7 @@ flowchart TD
 - One opt-out record per patient per practice, checked before either number sends. A STOP to the toll-free still counts after that practice gets its own number, and a STOP to the office number is not followed by the same text from the toll-free.
 - Every toll-free text leads with the practice name. On AWS, a US toll-free only honors STOP as the opt-out word.
 
-Email failover already exists and stays the last step. Neither AWS number can receive a photo. An insurance card or a clinical photo comes through the intake link until the office number is hosted on Bandwidth or Telnyx, which both accept pictures. When to send a plain text, a link, or a picture is in [`sms-and-picture-messages.md`](./sms-and-picture-messages.md).
+Email failover already exists and stays the last step. Neither AWS number can receive a photo. An insurance card or a clinical photo comes through the intake link until the office number is hosted on Bandwidth or Telnyx, which both accept pictures. When to send a plain text, a link, or a picture, and how that differs on the toll-free, an office number, and the short code, is in [`sms-and-picture-messages.md`](./sms-and-picture-messages.md#5-office-number-vs-toll-free-vs-short-code).
 
 ---
 
