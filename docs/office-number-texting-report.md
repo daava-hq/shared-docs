@@ -75,7 +75,7 @@ The short code being provisioned is the wrong number to put in front of patients
 
 - **Some T-Mobile customers never receive it.** AWS documents that some prepaid plans, including some T-Mobile prepaid plans, do not accept texts from a short code at all. An intake link sent on that code never arrives, and there is no error the patient can fix. A toll-free is a normal 10-digit number, and those plans can receive it.
 - **Patients do not recognize a 5- or 6-digit sender.** Solutionreach moved review texts off a short code because patients read it as a pharmacy or store alert. A toll-free still is not the office's own number, and it is a phone number a person can read.
-- **It is the slow, expensive path.** A US short code is listed at $650 to set up and $995 a month, and about 12 weeks after the application is clean. US carrier review also pauses the weeks of 11/23/2026, 12/21/2026, and 12/28/2026. One toll-free covers every office in the country.
+- **It is the slow, expensive path.** A US short code is listed at $650 to set up and $995 a month, and about 12 weeks after the application is clean. US carrier review also pauses the weeks of 11/23/2026, 12/21/2026, and 12/28/2026. A toll-free is verified in up to 15 business days on AWS, and its area code does not matter, so one number can serve offices in any region. The limit is that a toll-free belongs to one business (see [What it would take](#what-it-would-take)).
 
 The short code's advantage is speed once it is live: 100 message parts per second. That matters for a large blast, and it is a reason to keep the application if it is already in flight. It is a poor reason to make it the number patients see. Suggested use, if it is kept at all, is overflow when the toll-free's 3-per-second cap is the thing blocking a blast, with the same practice name on the first line.
 
@@ -93,7 +93,7 @@ That is doable. It is a backend change: today's sending uses one origination num
 | B | Already texting through Solutionreach, RevenueWell, Weave, or the VoIP provider | Schedule a release of the messaging record, then host it. Until release, the toll-free keeps sending |
 | C | Wireless, or the phone company will not release it | Stays on the toll-free. Do not promise this office its own number |
 
-AWS can issue the toll-free. AWS cannot host an office's existing number. Hosting needs Bandwidth or Telnyx. Twilio is outside the stack we use. That second carrier is an exception to the AWS-only rule, and it wants a written yes before any office number is hosted. Both carriers offer a HIPAA business associate agreement. Telnyx has a self-serve eligibility check. Bandwidth is the carrier Dental Intelligence uses and is the better escalation path when a phone vendor stalls a release.
+AWS can issue the toll-free. AWS cannot host an office's existing number. Hosting needs Bandwidth or Telnyx. Twilio is outside the stack we use. That second carrier is an exception to the AWS-only rule, and it wants a written yes before any office number is hosted. Both carriers offer a HIPAA business associate agreement. Telnyx has a self-serve eligibility check. Bandwidth is the carrier Dental Intelligence uses and is the better escalation path when a phone vendor stalls a release. Steps and lead times for each are in [What it would take](#what-it-would-take).
 
 ---
 
@@ -148,18 +148,120 @@ Every text goes out from one AWS origination number. Intake texts name the pract
 
 ---
 
-## Suggested build plan
+## What it would take
 
-1. **Request one toll-free and send from it.** Intake links, reminders, and verification codes. Practice name on the first line.
-2. **Run every practice's published number through an eligibility check** and sort them into the three cohorts above. Do this on a carrier that can actually host the number.
-3. **Host cohort A**, one letter and one 10DLC campaign per legal entity. Copy the legal name and EIN from the IRS letter. Mixed entities in one campaign get rejected.
-4. **Turn each hosted number on only after a test send and a test reply.** Calls to that number should still reach the desk.
-5. **Apply the fallback** in the diagram: office number when it is approved, toll-free otherwise, email if the text still fails. Alert when an active office goes quiet for a business day.
-6. **Cohort B on a schedule**, so releasing the old vendor does not leave a gap. Cohort C stays on the toll-free.
-7. **Keep marketing off the office number** when we get there, following NexHealth. A review request should not be able to STOP an intake link.
-8. **Any live test stays on the Riversbend test line.**
+### Vendors
 
-A shared EIN across clinics shares T-Mobile's daily cap. Third-party vetting is what raises that cap. Separate EINs mean a separate brand registration each. That detail belongs in the carrier setup, and the open questions ask which tax structure the group is actually on.
+| Vendor | Toll-free | Host an office number | Photo replies | HIPAA agreement | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **AWS End User Messaging** (current) | Yes. Verified in up to 15 business days. 3 message parts per second | **No.** AWS only issues its own new numbers | No | Covered by the AWS business associate addendum, if Daava has signed it | No new vendor approval needed |
+| **Telnyx** | Yes. Verified in 1–2 weeks; Telnyx says usually 5 business days or less | Yes, by API: eligibility check, order, ownership code, letter upload. 1–3 business days | Yes, on hosted numbers | Through sales, above a spending threshold Telnyx does not publish | Published prices. Easiest to automate onboarding |
+| **Bandwidth** | Yes. Manual review, up to 5 business days at Bandwidth before the industry reviewer | Yes, through an account manager. Letter signed within 30 days; provisioning can need manual work | Yes, on hosted numbers | Yes. Toll-free, 10DLC, and short codes are listed as covered | Dental Intelligence's carrier. Sales-led, prices negotiated |
+| **Twilio** | Yes | Yes | Yes | Only on Security or Enterprise editions | Outside the stack Daava uses. Not suggested |
+
+**Suggested split.** Put the toll-free on AWS now, because it needs no new vendor and the sending code already points at an AWS number. Add Telnyx or Bandwidth when the first office number is ready to host. A verified toll-free keeps its status if it later moves to that carrier, so starting on AWS does not trap the number there (per Bandwidth's toll-free handbook).
+
+**The other way to do it.** Put the toll-free on Telnyx or Bandwidth from the start. Everything is on one carrier, one inbound path, and patients can text photos to the toll-free. The cost is that the AWS-only exception and the HIPAA agreement have to be settled before the first text goes out.
+
+### One rule that shapes the toll-free
+
+A toll-free number belongs to **one business**. Carriers reject a toll-free shared across separate businesses (Bandwidth rejection 1107, Twilio error 30478). The ISV cannot register it in its own name on behalf of several clients.
+
+- If the practices send as one legal entity, for example the group under one EIN with each practice as a DBA, one toll-free can carry all of them. List the practice names as DBAs on the registration, and the samples should show a practice name first.
+- If each practice is its own legal entity with its own EIN, each needs **its own toll-free and its own verification**. That is still doable. It is the same backend change as the regional local numbers: the sender is chosen per practice, not from one origination number.
+
+The same question decides how many 10DLC brands the office numbers need later. It is open question 1.
+
+### Step 1: the toll-free (on AWS)
+
+```mermaid
+flowchart LR
+  A["Confirm the legal sender<br/>name + EIN from the IRS letter"] --> B["Privacy policy + terms<br/>pages live, with texting language"]
+  B --> C["Screenshot of the intake<br/>texting consent"]
+  C --> D["Request the toll-free<br/>and submit registration"]
+  D --> E["Carrier review<br/>up to 15 business days"]
+  E --> F["Configure replies,<br/>opt-outs, delivery events"]
+  F --> G["Point sending at<br/>the toll-free"]
+
+  classDef us fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
+  classDef wait fill:#fff4e5,stroke:#d9822b,color:#3a2200;
+  class A,B,C,D,F,G us;
+  class E wait;
+```
+
+1. **Confirm who the sender is.** The legal name has to match the IRS record exactly, not a trade name. Keep the IRS CP 575 or 147C letter on hand; AWS accepts it when automated verification fails.
+2. **Publish a privacy policy and terms** at public URLs, consistent with what intake shows the patient. Required for every new toll-free registration since 09/15/2026.
+3. **Capture the opt-in.** A screenshot of the intake texting-consent step (PNG, JPEG, or PDF, up to 500 KB), and a written description of it.
+4. **Request the number and submit the registration** in AWS End User Messaging. The form asks for company details, a business contact, a use case (health care and appointment reminders fit), monthly volume, the opt-in, and sample messages. The samples should look like the real texts: practice name first, the intake link, "Reply STOP to opt out."
+5. **Wait for carrier review, up to 15 business days.** An unverified toll-free has been blocked from sending since 01/31/2024, so nothing goes out on it while it is pending. A rejection comes back with a reason and starts another review.
+6. **Configure the number.** Turn on two-way messaging to an SNS topic so replies and STOPs arrive. Add delivery-event logging so a failed send can trigger the fallback.
+7. **Switch sending to the toll-free.** The send code already reads a single origination number from configuration, so the toll-free can carry today's texts with a configuration change. Fallback routing and reply handling are new work.
+
+### Step 2: the office numbers (on Telnyx or Bandwidth)
+
+```mermaid
+flowchart LR
+  A["Approve the vendor<br/>sign MSA + HIPAA agreement"] --> B["Inventory each office number<br/>phone company, texting today?"]
+  B --> C["Eligibility check"]
+  C --> D["Register the 10DLC brand<br/>per legal entity"]
+  D --> E["Campaign review<br/>about 1–7 business days"]
+  C --> F["Office signs the letter<br/>+ recent phone bill"]
+  F --> G["Ownership code,<br/>hosting 1–3 business days"]
+  E --> H["Assign number to campaign"]
+  G --> H
+  H --> I["Test send, test reply,<br/>desk phone still rings"]
+  I --> J["Switch that practice<br/>to its office number"]
+
+  classDef us fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
+  classDef wait fill:#fff4e5,stroke:#d9822b,color:#3a2200;
+  classDef office fill:#e9f7ef,stroke:#2e8b57,color:#0b2a17;
+  class A,B,C,D,H,I us;
+  class E,G wait;
+  class F,J office;
+```
+
+1. **Approve the vendor and sign the agreements.** The exception to AWS-only, a master agreement, and the HIPAA business associate agreement. Neither Telnyx nor Bandwidth publishes how long contracting takes.
+2. **Inventory every office number**: the number, the phone company, whether it is a landline or VoIP, and whether anything texts from it today.
+3. **Run the eligibility check** and sort the numbers into cohorts A, B, and C. Telnyx returns this immediately by API, with a reason when a number fails. Bandwidth runs it through the account team.
+4. **Register a 10DLC brand for each legal entity.** On Telnyx's published pass-through prices: $4.50 once per brand, $41.50 for standard vetting (1–7 business days, and the trust score sets the T-Mobile daily cap), $15 per campaign review including resubmissions, and $10 a month per campaign. Telnyx reviews a campaign the same or next business day; carrier review usually adds 3 business days or less.
+5. **Collect the letter of authorization** from each office, signed within 30 days of submission and listing the number, plus a recent bill from its phone company.
+6. **Host the number.** The carrier sends an ownership code to that number, and the office reads it back. Telnyx activates in 1–3 business days after the documents clear. Bandwidth can need manual provisioning, and suggests subscribing to order-status updates and testing each number.
+7. **Assign the number to the campaign**, then test: a send to an AT&T, a T-Mobile, and a Verizon phone, a reply, and a call to the desk to confirm voice is unchanged.
+8. **Switch that practice's sender to its office number.** The toll-free stays its fallback.
+
+Cohort B adds a step before 3: the office, or its old vendor, releases the messaging record. How long that takes depends on the old vendor and is not published. Cohort C stops at step 3 and stays on the toll-free.
+
+### Engineering work in Daava
+
+Phase 1 is mostly configuration. Phase 2 is real backend work.
+
+| Piece | Phase | What it does |
+| :--- | :--- | :--- |
+| Sender per practice | 2, or 1 if each practice needs its own toll-free | Replaces the single origination setting with a sender stored on each practice |
+| Carrier adapter | 2 | A second sending adapter for Telnyx or Bandwidth, beside the AWS one |
+| Reply and STOP handling | 1 | Receives replies from the AWS topic, and later from the carrier's webhook. Records STOP per patient per practice |
+| Delivery tracking and fallback | 1 | Reads delivery events. Routes office number, then toll-free, then email |
+| Quiet-office alert | 2 | Flags an active office that stops getting replies or delivery confirmations, the early sign of a phone-company change |
+| Onboarding records | 2 | Per office: eligibility result, letter and its date, hosting status, campaign ID |
+| Staff inbox | 2 | Where patient replies land, per practice. Addendum II's billing console |
+
+Any live test stays on the Riversbend test line.
+
+### Lead times the vendors publish
+
+| Step | Published lead time | Source |
+| :--- | :--- | :--- |
+| AWS toll-free verification | Up to 15 business days after submission | AWS |
+| Telnyx toll-free verification | 1–2 weeks; usually 5 business days or less | Telnyx |
+| Bandwidth toll-free verification | Up to 5 business days at Bandwidth, then the industry reviewer | Bandwidth |
+| 10DLC brand vetting | 1–7 business days | Telnyx |
+| 10DLC campaign approval | About 1–7 business days | Telnyx |
+| Office number hosting | 1–3 business days once documents clear | Telnyx, RevenueWell |
+| Release from a previous texting vendor | Not published | |
+| Vendor contract and HIPAA agreement | Not published | |
+| Short code, for comparison | About 12 weeks, plus the 2026 freeze weeks | AWS |
+
+Every one of these restarts on a rejection. The fastest path is a first submission whose legal name, website, consent screenshot, and samples all match.
 
 ---
 
@@ -167,14 +269,18 @@ A shared EIN across clinics shares T-Mobile's daily cap. Third-party vetting is 
 
 | # | Question | Answer |
 | :--- | :--- | :--- |
-| 1 | One shared toll-free, or one local 10DLC number per region? A local number means the sender is chosen from the practice's region. | |
-| 2 | Which practices should be in the first eligibility pass? | |
-| 3 | Which offices already text through Solutionreach, RevenueWell, Weave, or a VoIP provider? | |
-| 4 | One EIN for the group, or a separate EIN per practice? | |
+| 1 | Do the practices send as one legal entity (one EIN, practices as DBAs), or does each have its own EIN? This decides one toll-free or one per practice, and how many 10DLC brands. | |
+| 2 | One shared toll-free, or one local 10DLC number per region? A local number means the sender is chosen from the practice's region. | |
+| 3 | Which practices should be in the first eligibility pass? | |
+| 4 | Which offices already text through Solutionreach, RevenueWell, Weave, or a VoIP provider? | |
 | 5 | Should a STOP to the toll-free also stop that practice's office number, and the reverse? | |
 | 6 | Are stakeholders comfortable that photo replies wait until an office number is hosted on Bandwidth or Telnyx? | |
 | 7 | Does the in-flight short code stay as overflow, or does the toll-free replace it for launch? | |
-| 8 | | |
+| 8 | Has Daava signed the AWS business associate addendum? | |
+| 9 | Do the privacy policy and terms pages exist, and do they cover texting? | |
+| 10 | Toll-free on AWS now, or on Telnyx or Bandwidth from the start? | |
+| 11 | Telnyx or Bandwidth for hosting office numbers? | |
+| 12 | | |
 
 ---
 
@@ -191,3 +297,7 @@ Checked 11/20/2026. The research doc's citation list is the long version.
 - [Bandwidth: text-enable a non-Bandwidth number](https://www.bandwidth.com/support/en/articles/12823125-can-i-text-enable-a-non-bandwidth-phone-number) and [HIPAA-eligible services](https://www.bandwidth.com/support/en/articles/12823993-hipaa-eligible-products-and-services)
 - [AWS: origination identities](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-number-types.html) and [two-way SMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/two-way-sms-phone-number.html) (no incoming photos; no hosting of an existing office number)
 - [AWS short-code guide](https://aws.amazon.com/blogs/messaging-and-targeting/guide-to-sms-short-codes-with-aws-end-user-messaging/) (some prepaid plans do not receive them)
+- [AWS: toll-free registration](https://docs.aws.amazon.com/end-user-messaging/latest/userguide/nx-reg-type-tollfree.html), [the registration form](https://docs.aws.amazon.com/sms-voice/latest/userguide/registrations-tfn-register.html), and [business verification](https://docs.aws.amazon.com/sms-voice/latest/userguide/registration-help-tfn-verification.html) (up to 15 business days; privacy and terms URLs from 09/15/2026; legal name must match the EIN)
+- [Telnyx: toll-free verification guide](https://support.telnyx.com/en/articles/10729979-toll-free-verification-request-guide) and [troubleshooting](https://developers.telnyx.com/docs/messaging/toll-free-verification/troubleshooting) (1–2 weeks, no expedite)
+- [Telnyx: 10DLC quickstart](https://developers.telnyx.com/docs/messaging/10dlc/quickstart) and [10DLC costs](https://telnyx.com/resources/what-is-10dlc) (vetting 1–7 business days; brand, vetting, review, and campaign fees)
+- [Bandwidth: toll-free verification handbook](https://www.bandwidth.com/support/en/articles/12823247-bandwidth-toll-free-verification-handbook), [rejection reasons](https://www.bandwidth.com/support/en/articles/12823242-toll-free-verification-rejection-reasons) (1107: one toll-free per business), and [hosted messaging FAQ](https://www.bandwidth.com/support/en/articles/12823123-hosted-messaging-faq)
