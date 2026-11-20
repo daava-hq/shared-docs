@@ -50,13 +50,13 @@ flowchart TD
 
 ### Why a toll-free rather than a short code
 
-The short code being provisioned is the wrong number to put in front of patients, even as a temporary one.
+A short code is the wrong number to put in front of patients. The number we are getting is the toll-free.
 
 - **Some T-Mobile customers never receive it.** AWS documents that some prepaid plans, including some T-Mobile prepaid plans, do not accept texts from a short code at all. An intake link sent on that code never arrives, and there is no error the patient can fix. A toll-free is an ordinary 10-digit number, and those plans can receive it.
 - **Patients do not recognize a 5- or 6-digit sender.** Solutionreach moved review texts off a short code because patients read it as a pharmacy or store alert. A toll-free is still not the office's own number. It is a phone number a person can read.
 - **It is the slow, expensive path.** A US short code is listed at $650 to set up and $995 a month, and about 12 weeks after the application is clean. US carrier review also pauses the weeks of 11/23/2026, 12/21/2026, and 12/28/2026. A toll-free is verified in up to 15 business days on AWS.
 
-The short code's advantage is speed once it is live: 100 message parts per second. That matters for a large blast, and it is a reason to keep the application if it is already in flight. It is a poor reason to make it the number patients see. Suggested use, if it is kept at all, is overflow when the toll-free's 3-per-second cap is the thing blocking a blast, with the practice name on the first line.
+A short code is faster once it is live, at 100 message parts per second. That speed is not a reason to use one. A blast the toll-free cannot carry at 3 per second waits for the office numbers.
 
 ### A local number, if a toll-free feels too generic
 
@@ -308,7 +308,7 @@ These are the carriers' clocks. They say nothing about how long the Daava work i
 | 4 | Which offices already text through Solutionreach, RevenueWell, Weave, or a VoIP provider? | |
 | 5 | Should a STOP to the toll-free also stop that practice's office number, and the reverse? | |
 | 6 | Are stakeholders comfortable that photo replies wait until an office number is hosted on Bandwidth or Telnyx? | |
-| 7 | Does the in-flight short code stay as overflow for large blasts, or does the toll-free replace it? | |
+| 7 | Does the in-flight short code stay as overflow for large blasts, or does the toll-free replace it? | The toll-free replaces it. We are not using a short code. |
 | 8 | Has Daava signed the AWS business associate addendum? | |
 | 9 | Do the privacy policy and the terms exist as public pages, and do they mention texting? | |
 | 10 | Toll-free on AWS now, or on Telnyx or Bandwidth from the start? | |

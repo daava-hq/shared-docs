@@ -100,17 +100,17 @@ A link preview is the in-between. A phone can show a small card for an SMS link,
 
 ---
 
-## 4. How this sits on the numbers in the other report
+## 4. How this sits on the toll-free
 
-The office-number report suggests a toll-free on AWS now, each office's own number as it qualifies, and the short code only as overflow. SMS works on all three. MMS does not.
+These messages come from a toll-free number on AWS. That is the number, in place of a short code. Each office's own number comes later, as it qualifies, which is the [other report](./office-number-texting-report.md). SMS and MMS both go out from the toll-free.
 
-| MMS job | Toll-free on AWS, now | Office number, once hosted | Short code |
-| :--- | :--- | :--- | :--- |
-| Contact card, calendar file, map, promotion image | Yes, if the number's capabilities include MMS | Yes | Only if the application asked for MMS and the carriers approved the sample |
-| Photo back from the patient | No. AWS receives words only | Yes. This is the job that needs this number | No, on AWS |
-| Speed for a picture | 3 a second. About 28 minutes for 5,000 | Set by the practice's registration. A large list also counts against T-Mobile's daily cap for that business | 40 a second, and some prepaid plans never receive a short code at all |
+| MMS job | Toll-free on AWS | Office number, once hosted |
+| :--- | :--- | :--- |
+| Contact card, calendar file, map, promotion image | Yes, if the number's capabilities include MMS | Yes |
+| Photo back from the patient | No. AWS receives words only | Yes. This is the job that needs this number |
+| Speed for a picture | 3 a second. About 28 minutes for 5,000 | Set by the practice's registration. A large list also counts against T-Mobile's daily cap for that business |
 
-So the contact card, the calendar file, and Lacey's image can be tried on the toll-free. The photo a patient sends back is the MMS job that waits for the office number. That matches the other report: insurance cards and clinical photos come through the intake page until Telnyx or Bandwidth is hosting the number.
+The contact card, the calendar file, and Lacey's image go out from the toll-free. The photo a patient sends back waits for the office number. Until then, insurance cards and clinical photos come through the intake page.
 
 Two checks before the first MMS on the toll-free. The capabilities column in AWS has to say MMS. Numbers bought after May 2024 include it, and the capability cannot be added later. And the verification samples have to include whatever we will send. A toll-free approved for reminders and intake links is not approved for a promotion.
 
@@ -171,6 +171,6 @@ Checked 11/20/2026.
 - [Daava Meeting, 11/20/2026](https://docs.google.com/document/d/15GMaXbCfxa2gcisQ22qi7cT3efKJT85V0DcC45L8zMU), transcript from about 00:53:59. Lacey asked for the promotion as a photo. Prem and Tanmay separated a text from a picture and offered a link. Lauren asked about 160 characters, the practice name, unsubscribe, and a short link.
 - [MMS vs. SMS and AWS MMS guide](https://docs.google.com/document/d/13mVnaKqz_W9B68DCmsRI6tNhBxUxAY1n2moa8fjpEXY). The channel differences, the three-piece cost break, link previews, and the AWS send limits. The prices in section 2 are that doc's list rates.
 - [AWS: MMS file types and size](https://docs.aws.amazon.com/sms-voice/latest/userguide/mms-limitations-character.html) and [sending an MMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/send-mms-message.html)
-- [AWS: throughput](https://docs.aws.amazon.com/sms-voice/latest/userguide/sms-limitations-mps.html) (MMS is one part: 3 a second on a toll-free, 40 on a short code)
+- [AWS: throughput](https://docs.aws.amazon.com/sms-voice/latest/userguide/sms-limitations-mps.html) (an MMS is one part, 3 a second on a toll-free)
 - [AWS: How to send MMS](https://aws.amazon.com/blogs/messaging-and-targeting/how-to-send-mms-using-aws-end-user-messaging/) (no inbound pictures; numbers bought after May 2024 include MMS)
 - [Telnyx: Hosted SMS](https://developers.telnyx.com/docs/messaging/messages/hosted-sms) and [MMS media limits](https://developers.telnyx.com/docs/messaging/messages/mms-transcoding) (pictures both ways on a hosted office number; keep files under 600 KB)
