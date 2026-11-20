@@ -126,7 +126,7 @@ Most high-performing dental offices do not pick between CareCredit and Cherry—
 
 ## 6. Patient Messaging & Automated Notifications (Especially Phases 6 & 7)
 
-> **Status (11/20/2026).** Two-way SMS is a **planned** function, not a live one. Today Daava sends one-way texts (intake links and form reminders) from a single shared AWS End User Messaging number, with Amazon SES email as the other channel. Nothing receives a patient reply, there is no two-way console, and there is no per-practice 10DLC registration. The flows below describe the intended payment and status messaging. The near-term suggestion is one shared short code plus a toll-free or 10DLC fallback, with office-number texting later. Detail is in [`office-number-texting-report.md`](./office-number-texting-report.md).
+> **Status (11/20/2026).** Two-way SMS is a **planned** function, not a live one. Today Daava sends one-way texts (intake links and form reminders) from a single shared AWS End User Messaging number, with Amazon SES email as the other channel. Nothing receives a patient reply, there is no two-way console, and there is no per-practice 10DLC registration. The flows below describe the intended payment and status messaging. The suggestion in [`office-number-texting-report.md`](./office-number-texting-report.md) is to start on one toll-free, then review each office number for texting, and fall back to the toll-free when an office number is not ready.
 
 Patient messaging is meant to tie clearinghouse events and payment collection together, replacing Pearly's outbound statement texts. TCPA and HIPAA consent is captured at intake (**Phase 1**).
 

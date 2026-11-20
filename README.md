@@ -9,7 +9,7 @@ Shareable Daava specifications and product documentation for reviewers.
 | Document | Covers |
 | --- | --- |
 | [`docs/dental-insurance-claims-specification.md`](./docs/dental-insurance-claims-specification.md) | End-to-end dental insurance and claims lifecycle — intake and coverage triage, EDI 270/271 eligibility, Open Dental write-back, clinical sign-off, AI CDT scrubbing, human-in-the-loop EDI 837D transmission, and STAX balance reconciliation. Includes a seven-phase Mermaid decision tree. |
-| [`docs/office-number-texting-report.md`](./docs/office-number-texting-report.md) | Suggested path for patient texting: move forward with one shared short code, add a toll-free or 10DLC number as the fallback, and treat texting from the practice's own phone number as a later step. Includes risks, a suggested build plan, and open questions. |
+| [`docs/office-number-texting-report.md`](./docs/office-number-texting-report.md) | How Daava could text from each practice's own phone number. Suggests starting on one toll-free, then reviewing each office number, with a fallback to the toll-free and then email. Includes a suggested build plan and open questions. |
 
 ---
 
