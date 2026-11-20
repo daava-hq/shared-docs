@@ -1,12 +1,12 @@
 # Specification Addendum II: Clearinghouses, Patient Payments, Financing & Messaging
 
-**Document Version:** 5.1  
+**Document Version:** 5.2 (11/20/2026 — §6: two-way SMS marked as planned, not live)  
 **Associated Specification:** End-to-End Dental Insurance & Claims Specification (`dental-insurance-claims-specification.md`, v5.0)  
 **Stakeholders:** Jaime Kirk, Carlos Lopez, Opal Anderson  
 **Tools Covered:**  
 * **Clearinghouses:** Vyne Dental (FastAttach), DentalXChange (XConnect), Stedi, plus unvetted market alternatives  
 * **Patient Payments & Financing:** STAX, Pearly (Legacy), CareCredit, Cherry  
-* **Patient Messaging & Notifications:** Daava 2-Way SMS (AWS SNS 10DLC) & Automated Email (Amazon SES)  
+* **Patient Messaging & Notifications:** One-way SMS today (AWS End User Messaging) and automated email (Amazon SES). Two-way SMS and per-practice office-number texting are planned — see [`office-number-texting-report.md`](./office-number-texting-report.md).  
 
 ---
 
@@ -126,11 +126,13 @@ Most high-performing dental offices do not pick between CareCredit and Cherry—
 
 ## 6. Patient Messaging & Automated Notifications (Especially Phases 6 & 7)
 
-Because Daava already operates an **A2P 10DLC 2-Way SMS engine (AWS SNS)** with automatic **Amazon SES email failover** (captured via TCPA/HIPAA consent in **Phase 1**), patient messaging ties directly into clearinghouse events and payment collection—replacing Pearly's outbound statement texts without paying extra SaaS fees.
+> **Status (11/20/2026).** Two-way SMS is a **planned** function, not a live one. Today Daava sends one-way texts (intake links and form reminders) from a single shared AWS End User Messaging number, with Amazon SES email as the other channel. Nothing receives a patient reply, there is no two-way console, and there is no per-practice 10DLC registration. The flows below describe the intended payment and status messaging. The suggestion in [`office-number-texting-report.md`](./office-number-texting-report.md) is to start on a toll-free (one shared number if the practices text as one legal entity, otherwise one per practice), then review each office number for texting, and fall back to the toll-free when an office number is not ready.
+
+Patient messaging is meant to tie clearinghouse events and payment collection together, replacing Pearly's outbound statement texts. TCPA and HIPAA consent is captured at intake (**Phase 1**).
 
 ### 6.1 Core Messaging Guardrails (Zero-PHI & Compliance)
 * **Strict Zero-PHI Outbound Rule:** Outbound text messages and emails *never* include dental procedure names, CDT codes, diagnosis notes, or sensitive insurance details in plain text. Instead, messages deliver a brief, friendly clinic alert with a **secure, tokenized portal link**. Once the patient taps the link and confirms their identity, they view the full itemized ledger.
-* **Consent & Opt-Out Continuity:** Communication consent is captured at intake (**Phase 1**) and written to Open Dental's Commlog, with automatic `STOP` / `HELP` compliance across every billing and status text.
+* **Consent & Opt-Out Continuity:** Communication consent is captured at intake (**Phase 1**) and written to Open Dental's Commlog. Every billing and status text includes `STOP` / `HELP` language. Honoring a reply — and keeping a `STOP` to one practice from silencing every other practice — is part of the planned two-way work. Today a `STOP` to the shared sender would apply to every Daava practice.
 
 ### 6.2 How Notifications Work Across the Lifecycle (Focus on Phases 6 & 7)
 
@@ -146,12 +148,12 @@ Because Daava already operates an **A2P 10DLC 2-Way SMS engine (AWS SNS)** with 
      * **Pay Now via STAX Pay-by-Link:** Supports Credit/Debit, Apple Pay, Google Pay, and HSA/FSA cards, settling directly into the clinic's bank account at ~2% interchange rates and writing the `$0.00` reconciliation back to Open Dental.
      * **Pay Over Time (Cherry / CareCredit):** For larger balances (e.g., crowns, SRP, or post-maximum UCR balances), the same screen displays a **Cherry** monthly payment link and **CareCredit** payment option right next to the STAX button.
    * *Smart Reminder Drips (Auto-Cancel on Payment):* If a balance remains unpaid, Daava sends gentle, automated follow-up texts/emails (e.g., **Day 5, Day 15, and Day 30**—mirroring Pearly's cadence). The instant the patient pays via STAX, Cherry, CareCredit, or in-office terminal and the Open Dental ledger hits `$0.00`, all scheduled reminders automatically stop.
-   * *2-Way SMS Billing Q&A:* Patients frequently delay paying dental bills because they don't understand deductibles, downgrades, or why a service wasn't covered at 100%. Patients can **reply directly to any balance text**; their message routes into Daava's **2-Way SMS Console** so the billing or front-desk coordinator can answer quickly in writing and re-send the payment link.
+   * *2-Way SMS Billing Q&A (planned):* Patients frequently delay paying dental bills because they don't understand deductibles, downgrades, or why a service wasn't covered at 100%. The plan is that a patient can **reply directly to a balance text** and the reply lands in a **2-Way SMS Console** so the billing or front-desk coordinator can answer in writing and re-send the payment link. That console is not built yet.
 
 ```mermaid
 sequenceDiagram
   participant CH as Clearinghouse (835 ERA)<br/>Stedi / DentalXChange
-  participant Daava as Daava Core & Messaging<br/>(AWS SNS SMS / SES Email)
+  participant Daava as Daava Core and Messaging<br/>one-way SMS today, two-way planned
   participant Pat as Patient Mobile Portal<br/>(Zero-PHI Tokenized Link)
   participant Pay as STAX / Cherry / CareCredit<br/>& Open Dental Ledger
 
@@ -159,7 +161,7 @@ sequenceDiagram
   alt Remaining Patient Balance > $0.00 (Phase 7)
     Daava->>Pat: Send Zero-PHI SMS + Email: "Your visit summary is ready"
     Pat->>Pat: Patient taps link & sees itemized fee, ins paid & balance
-    alt Patient Has a Billing Question
+    opt Planned: two-way reply (not live)
       Pat->>Daava: Replies via 2-Way SMS ("Why wasn't this 100% covered?")
       Daava-->>Pat: Coordinator replies in-thread & confirms breakdown
     end
