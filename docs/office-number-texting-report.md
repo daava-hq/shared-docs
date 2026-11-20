@@ -25,15 +25,15 @@ This report is about one thing: sending and receiving patient texts from the pho
 Stakeholders want texts moving. Waiting to review every office line first would hold that up: each number can fail eligibility, and the ones that pass still wait on a signed letter and a carrier campaign.
 
 ```mermaid
-flowchart LR
-  Q{"Text as one<br/>legal entity?"}
+flowchart TD
+  Q{"Do the practices text<br/>as one legal entity?"}
   Q -->|Yes| ONE["One toll-free<br/>for the group"]
   Q -->|No| MANY["One toll-free<br/>per practice"]
-  ONE --> SEND["Send intake links,<br/>reminders, and codes"]
+  ONE --> SEND["Send intake links, reminders,<br/>and verification codes"]
   MANY --> SEND
-  SEND --> CHECK["Check each<br/>office number"]
-  CHECK --> HOST["Host the ones<br/>that qualify"]
-  CHECK --> STAY["The rest stay<br/>on the toll-free"]
+  SEND --> CHECK["Check each office number"]
+  CHECK --> HOST["Host the ones that qualify"]
+  CHECK --> STAY["The rest stay on the toll-free"]
 
   classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
@@ -154,26 +154,23 @@ Between the two hosting carriers: Telnyx is the easier one to automate, because 
 On AWS, as the suggested first step. The same paperwork applies if the toll-free goes to Telnyx or Bandwidth instead. Orange is time spent waiting on a carrier.
 
 ```mermaid
-block-beta
-  columns 3
-  A["1. Legal name and EIN"]
-  B["2. Privacy policy and terms"]
-  C["3. Consent screenshot"]
-  D["4. Submit the toll-free"]
-  E["5. Carrier review, up to 15 business days"]
-  F["6. Replies and delivery tracking"]
-  G["7. Send from the toll-free"]:3
-  A --> B
-  B --> C
-  D --> E
-  E --> F
-  style A fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style B fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style C fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style D fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style F fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style E fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  style G fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
+flowchart LR
+  A["1. Legal name and EIN"] --> B["2. Privacy policy and terms"] --> C["3. Consent screenshot"]
+
+  classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  class A,B,C actionNode
+```
+
+```mermaid
+flowchart LR
+  D["4. Submit the toll-free"] --> E["5. Carrier review<br/>up to 15 business days"] --> G["6. Turn on replies<br/>7. Send from the toll-free"]
+
+  classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef waitNode fill:#fff3e0,stroke:#ef6c00,color:#e65100
+  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
+  class D actionNode
+  class E waitNode
+  class G cleanNode
 ```
 
 1. **Confirm who the sender is.** The legal name has to match the IRS record exactly, including punctuation, rather than a trade name or "Daava." Keep the IRS CP 575 or 147C letter on hand. AWS accepts it when the automatic check fails. If each practice is its own entity, this step happens once per practice.
@@ -191,26 +188,20 @@ block-beta
 On Telnyx or Bandwidth, after the toll-free is sending. Cohort A is the happy path below. Cohort B adds a release from the old vendor before the eligibility check can pass. Cohort C stops at the eligibility check and stays on the toll-free.
 
 ```mermaid
-block-beta
-  columns 3
-  A["1. Sign the agreements"]
-  B["2. List every office number"]
-  C["3. Eligibility check"]
-  D["4. Brand and campaign, 1 to 7 business days"]
-  E["5. Letter, then hosting, 1 to 3 business days"]
-  F["6. Test the text, the reply, and the desk"]
-  G["7. Send from the office number"]:3
-  A --> B
-  B --> C
-  D --> E
+flowchart TD
+  A["1. Sign the agreements"] --> B["2. List every office number"] --> C["3. Eligibility check"]
+  C --> D["4. Brand and campaign<br/>1 to 7 business days"]
+  C --> E["5. Letter, then hosting<br/>1 to 3 business days"]
+  D --> F["6. Test the text, the reply,<br/>and the desk phone"]
   E --> F
-  style A fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style B fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style C fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style F fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  style D fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  style E fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  style G fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
+  F --> G["7. Send from the office number"]
+
+  classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  classDef waitNode fill:#fff3e0,stroke:#ef6c00,color:#e65100
+  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
+  class A,B,C,F actionNode
+  class D,E waitNode
+  class G cleanNode
 ```
 
 The campaign registration and the signed letter can run side by side. Both have to finish before the number can send.
@@ -230,10 +221,10 @@ The campaign registration and the signed letter can run side by side. Both have 
 This is the safety net, and sending from office numbers does not work without it. Suggested together with the toll-free, so a clinic that changes phone companies has a backup already running.
 
 ```mermaid
-flowchart LR
-  MSG["A text for<br/>a practice"] --> READY{"Office number<br/>ready?"}
-  READY -->|Yes| OFFICE["Send from<br/>the office number"]
-  READY -->|Not yet| TF["Send from<br/>the toll-free"]
+flowchart TD
+  MSG["A text for a practice"] --> READY{"Office number ready?"}
+  READY -->|Yes| OFFICE["Send from the office number"]
+  READY -->|Not yet| TF["Send from the toll-free"]
   OFFICE --> OK{"Delivered?"}
   OK -->|Yes| DONE["Done"]
   OK -->|No| TF
