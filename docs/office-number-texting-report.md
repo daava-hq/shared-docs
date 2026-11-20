@@ -32,7 +32,7 @@ flowchart TD
   ONE --> SEND["Send intake links, reminders,<br/>and verification codes"]
   MANY --> SEND
   SEND --> CHECK["Check each office number"]
-  CHECK --> HOST["Host the ones that qualify"]
+  CHECK --> HOST["Host the ones that qualify,<br/>then send from them"]
   CHECK --> STAY["The rest stay on the toll-free"]
 
   classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
@@ -154,21 +154,19 @@ Between the two hosting carriers: Telnyx is the easier one to automate, because 
 On AWS, as the suggested first step. The same paperwork applies if the toll-free goes to Telnyx or Bandwidth instead. Orange is time spent waiting on a carrier.
 
 ```mermaid
-flowchart LR
-  A["1. Legal name and EIN"] --> B["2. Privacy policy and terms"] --> C["3. Consent screenshot"]
+flowchart TD
+  A["1. Confirm the legal name and EIN<br/>against the IRS letter"] --> B["2. Publish the privacy policy<br/>and the terms, with texting language"]
+  B --> C["3. Screenshot the intake screen<br/>where the patient agrees to texts"]
+  C --> D["4. Request the toll-free<br/>and submit the registration"]
+  D --> E["5. Carrier review<br/>up to 15 business days"]
+  E --> F["6. Turn on replies<br/>and delivery tracking"]
+  F --> G["7. Point sending at the toll-free"]
 
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  class A,B,C actionNode
-```
+  classDef waitNode fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
 
-```mermaid
-flowchart LR
-  D["4. Submit the toll-free"] --> E["5. Carrier review<br/>up to 15 business days"] --> G["6. Turn on replies<br/>7. Send from the toll-free"]
-
-  classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef waitNode fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
-  class D actionNode
+  class A,B,C,D,F actionNode
   class E waitNode
   class G cleanNode
 ```
@@ -189,16 +187,17 @@ On Telnyx or Bandwidth, after the toll-free is sending. Cohort A is the happy pa
 
 ```mermaid
 flowchart TD
-  A["1. Sign the agreements"] --> B["2. List every office number"] --> C["3. Eligibility check"]
-  C --> D["4. Brand and campaign<br/>1 to 7 business days"]
-  C --> E["5. Letter, then hosting<br/>1 to 3 business days"]
-  D --> F["6. Test the text, the reply,<br/>and the desk phone"]
-  E --> F
-  F --> G["7. Send from the office number"]
+  A["1. Sign the vendor agreement<br/>and the HIPAA agreement"] --> B["2. List every office number,<br/>its phone company, and who texts from it today"]
+  B --> C["3. Eligibility check"]
+  C --> D["4. Register the brand and the campaign<br/>about 1 to 7 business days"]
+  D --> E["5. The office signs the letter,<br/>then hosting takes 1 to 3 business days"]
+  E --> F["6. Test a send, a reply,<br/>and a call to the desk"]
+  F --> G["7. That practice sends<br/>from its own number"]
 
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-  classDef waitNode fill:#fff3e0,stroke:#ef6c00,color:#e65100
-  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,color:#1b5e20
+  classDef waitNode fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+  classDef cleanNode fill:#dcfce7,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+
   class A,B,C,F actionNode
   class D,E waitNode
   class G cleanNode
@@ -222,23 +221,21 @@ This is the safety net, and sending from office numbers does not work without it
 
 ```mermaid
 flowchart TD
-  MSG["A text for a practice"] --> READY{"Office number ready?"}
+  MSG["A text for a practice"] --> READY{"That office number<br/>is hosted and approved?"}
   READY -->|Yes| OFFICE["Send from the office number"]
-  READY -->|Not yet| TF["Send from the toll-free"]
+  READY -->|"Not yet, or ineligible"| TF["Send from the toll-free"]
   OFFICE --> OK{"Delivered?"}
   OK -->|Yes| DONE["Done"]
-  OK -->|No| TF
+  OK -->|"No, or the text route was lost"| TF
   TF --> STILL{"Delivered?"}
   STILL -->|Yes| DONE
   STILL -->|No| EMAIL["Email"]
 
   classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
-  classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
   classDef cleanNode fill:#dcfce7,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
   classDef fallNode fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
 
   class READY,OK,STILL decisionNode
-  class MSG actionNode
   class OFFICE,DONE cleanNode
   class TF,EMAIL fallNode
 ```
