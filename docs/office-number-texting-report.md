@@ -119,7 +119,7 @@ As of `84bb5ea`:
 | :--- | :--- | :--- |
 | **Sending** | `AwsSmsAdapter` (`lib/communication/adapters/aws-sms.ts`) publishes through Amazon SNS with a single origination identity from `AWS_SMS_ORIGINATION_NUMBER` or `AWS_SMS_SENDER_ID`. | There is one sender for the whole deployment. No per-clinic sender exists. |
 | **Intake auto-send** | `lib/intake/appointment-trigger/senders.ts` reads the same global origination number. Message bodies name the clinic and end with `Reply STOP to opt out.` | The clinic name appears in the text, but every clinic's texts come from the same number. |
-| **Inbound texts** | No code receives inbound SMS. | Addendum II §6 describes a two-way SMS console where patients reply to balance texts. That console still has to be built. |
+| **Inbound texts** | No code receives inbound SMS. | Addendum II §6 (v5.2) describes the two-way billing console as a planned function. It is not built. |
 | **Opt-outs** | Handled by AWS's default opt-out list on the origination number. | A `STOP` applies to the shared sender, so it silences every Daava practice for that patient, which is the problem Solutionreach fixed. |
 | **Provider choice** | Adapter pattern (`ISmsAdapter`) with SMS-to-email failover. | Adding a hosted-SMS provider fits as a second `ISmsAdapter`. The adapter pattern does not need to change. |
 
