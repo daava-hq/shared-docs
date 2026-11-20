@@ -67,7 +67,23 @@ The pattern worth copying from NexHealth: care texts and marketing texts do not 
 
 Stakeholders want texts moving. Reviewing every office line first would hold that up, because each number can fail eligibility, and the ones that pass still wait on a letter and a 10DLC campaign.
 
-**Suggested first step.** Request one toll-free number and send notifications from it: intake links, form reminders, verification codes. Dental Intelligence uses a verified toll-free as its default for this. Patients see a 10-digit business number rather than a 5-digit short code. A short code also misses some prepaid plans, including some T-Mobile prepaid plans, takes about 12 weeks, and is listed at $650 to set up and $995 a month. A toll-free is capped at 3 message parts per second, which is enough to start and too slow for a huge blast. That limit is a reason to move offices onto their own numbers, not a reason to wait.
+**Suggested first step.** Request one toll-free number and send notifications from it: intake links, form reminders, verification codes. Dental Intelligence uses a verified toll-free as its default for this. A toll-free is capped at 3 message parts per second, which is enough to start and too slow for a huge blast. That limit is a reason to move offices onto their own numbers, not a reason to wait.
+
+### Why a toll-free rather than a short code
+
+The short code being provisioned is the wrong number to put in front of patients, even as a temporary one.
+
+- **Some T-Mobile customers never receive it.** AWS documents that some prepaid plans, including some T-Mobile prepaid plans, do not accept texts from a short code at all. An intake link sent on that code never arrives, and there is no error the patient can fix. A toll-free is a normal 10-digit number, and those plans can receive it.
+- **Patients do not recognize a 5- or 6-digit sender.** Solutionreach moved review texts off a short code because patients read it as a pharmacy or store alert. A toll-free still is not the office's own number, and it is a phone number a person can read.
+- **It is the slow, expensive path.** A US short code is listed at $650 to set up and $995 a month, and about 12 weeks after the application is clean. US carrier review also pauses the weeks of 11/23/2026, 12/21/2026, and 12/28/2026. One toll-free covers every office in the country.
+
+The short code's advantage is speed once it is live: 100 message parts per second. That matters for a large blast, and it is a reason to keep the application if it is already in flight. It is a poor reason to make it the number patients see. Suggested use, if it is kept at all, is overflow when the toll-free's 3-per-second cap is the thing blocking a blast, with the same practice name on the first line.
+
+### A local number, if a toll-free feels too generic
+
+A leased 10-digit number in the practice's area code looks more like a local call. One local number does not cover the group. A patient at a practice in another region would get a text from an unfamiliar area code. Covering that means **one local number per region**, and the sender is chosen from the practice's region rather than from a single origination number.
+
+That is doable. It is a backend change: today's sending uses one origination number for every practice. Regional numbers mean a sender on each practice, a 10DLC campaign those numbers share or one campaign per region, and the T-Mobile daily cap that comes with 10DLC. A toll-free avoids that split. The regional approach is worth a decision if stakeholders want the temporary number to look local. It is in the open questions.
 
 **Suggested second step.** Look at each practice's published number on its own.
 
@@ -151,13 +167,13 @@ A shared EIN across clinics shares T-Mobile's daily cap. Third-party vetting is 
 
 | # | Question | Answer |
 | :--- | :--- | :--- |
-| 1 | Is one shared toll-free acceptable for the offices whose own number is not ready? | |
+| 1 | One shared toll-free, or one local 10DLC number per region? A local number means the sender is chosen from the practice's region. | |
 | 2 | Which practices should be in the first eligibility pass? | |
 | 3 | Which offices already text through Solutionreach, RevenueWell, Weave, or a VoIP provider? | |
 | 4 | One EIN for the group, or a separate EIN per practice? | |
 | 5 | Should a STOP to the toll-free also stop that practice's office number, and the reverse? | |
 | 6 | Are stakeholders comfortable that photo replies wait until an office number is hosted on Bandwidth or Telnyx? | |
-| 7 | Does the in-flight short code stay, or does the toll-free replace it for launch? | |
+| 7 | Does the in-flight short code stay as overflow, or does the toll-free replace it for launch? | |
 | 8 | | |
 
 ---
