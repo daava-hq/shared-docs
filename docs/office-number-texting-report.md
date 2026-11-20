@@ -1,404 +1,164 @@
-# Office-Number Texting: How Daava Can Text From the Practice's Own Phone Number
+# Patient texting: a suggested path
 
-**Document Version:** 1.0  
-**Date:** 11/20/2026  
-**Owner:** Jaime Kirk  
-**Status:** Proposal for review  
-**Related:** [Addendum II §6, Patient Messaging & Automated Notifications](./addendum_ii_clearinghouses_patient_payments_financing_tools.md)  
-**Code baseline:** `daava-hq/daava-ai` `main` @ `84bb5ea` (11/19/2026)
+**Date:** 11/20/2026
+**Status:** Suggestion for review. Not a build commitment.
+**For:** Jaime Kirk, Opal Anderson, and the practice stakeholders
+**Research:** [DSO Two-Way Texting Architecture](https://docs.google.com/document/d/1FVjLhQ24BnyQC6zGS9DUdjUafkfJ03Loa-z8H_P7nyM) (Gemini deep research, shared 11/20/2026). Code checked against `daava-hq/daava-ai` `main` @ `84bb5ea`.
 
 ---
 
-## 1. Summary
+## The suggestion
 
-Solutionreach texts patients from the number printed on the practice's door. It does this with **hosted SMS**. The practice signs a letter of authorization (LOA), and Solutionreach's messaging carrier takes over the *text* route for that number. Voice calls stay with whatever phone company the office already uses. Nothing about the desk phones changes.
+Move forward with **one shared short code**, so notifications can start. Request **one toll-free number or one 10DLC number** at the same time, and use it when the short code cannot deliver.
 
-Daava can offer the same thing. AWS End User Messaging, our current SMS platform, cannot host a number that lives with another carrier, so this needs a second messaging provider that sells hosted SMS. The recommendation is a **two-sender model**:
+Texting from each practice's own office phone number is a later suggestion. That is how Solutionreach does it. It is not required to start sending.
 
-| Sender | Who owns it | What it carries | Status |
-| :--- | :--- | :--- | :--- |
-| **Daava short code** (AWS End User Messaging) | Daava, shared by all practices | One-way, high-volume notifications: intake links, verification codes, form reminders | Being provisioned now |
-| **Practice office number** (hosted SMS through Bandwidth or Telnyx) | The practice, with text routing hosted by Daava | Two-way conversations, balance and payment texts, and, once the number's 10DLC campaign is approved, any practice-branded text | Proposed in this report |
-
-This matches how the market splits the job. Solutionreach, RevenueWell, NexHealth, Dental Intelligence and Weave all text from the office number when they can, and every one of them keeps a vendor-owned number (a short code, a toll-free number, or a pool number) for bulk traffic or as the fallback when hosting fails.
-
-> [!IMPORTANT]
-> Two decisions are needed before any build work starts (see [§10](#10-decisions-needed)):
-> 1. **An exception to the AWS-only infrastructure rule.** The Agent Operations Manual mandates a 100% AWS stack and forbids Twilio. Hosted SMS requires a non-AWS carrier. Bandwidth or Telnyx would be the only non-AWS runtime dependency in the messaging path.
-> 2. **Whether automated notifications move to the office number once a practice is approved,** as Solutionreach does, or stay on the short code, as Dental Intelligence and NexHealth do.
+The research doc recommends pausing the short code and going straight to office numbers. This suggestion goes the other way, because the stakeholders want texts going out. The risks that doc raises are why the fallback number is part of the suggestion, not a reason to wait.
 
 ---
 
-## 2. How Solutionreach Does It
+## Why start here
 
-### 2.1 The mechanism
+A US short code sends at 100 message parts per second. That covers intake links, form reminders, and verification codes across practices. It is the number already being provisioned.
 
-A US phone number has two routes that the industry treats as separate. The **voice route** is owned by the practice's phone company. The **messaging route** is recorded in a shared carrier routing registry (the NetNumber database, keyed by a service-provider ID). Hosted SMS changes only the messaging record. After the change, a text sent to the office number goes to the hosting vendor's platform instead of the phone company.
+Office-number texting would hold that up. AWS cannot text-enable a number that already belongs to a practice's phone company. Doing it means a second carrier, a signed letter from each practice, and a carrier registration that runs in weeks. Some numbers, especially VoIP lines and any number already texting through another vendor, cannot be hosted at all.
+
+---
+
+## How a text would go out
 
 ```mermaid
 flowchart LR
-  PAT(["Patient's mobile phone"])
-
-  subgraph CARRIER["Practice's existing phone company"]
-    VOICE["Voice service<br/>desk phones, IVR, fax"]
-  end
-
-  subgraph VENDOR["Texting vendor (Solutionreach)"]
-    MSG["Messaging carrier<br/>(hosted SMS)"]
-    INBOX["Staff inbox<br/>SR Conversations"]
-    AUTO["Reminders, recalls,<br/>review invites"]
-  end
-
-  PAT -- "Calls (555) 010-0100" --> VOICE
-  PAT -- "Texts (555) 010-0100" --> MSG
-  MSG --> INBOX
-  AUTO --> MSG
-  INBOX --> MSG
-  MSG -- "Sent from (555) 010-0100" --> PAT
-
-  classDef voice fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
-  classDef msg fill:#e9f7ef,stroke:#2e8b57,color:#0b2a17;
-  classDef pat fill:#fff7e0,stroke:#b8860b,color:#3a2a00;
-  class VOICE voice;
-  class MSG,INBOX,AUTO msg;
-  class PAT pat;
-```
-
-### 2.2 What the practice does
-
-1. **Provision the landline** in SR Conversations and sign the LOA.
-2. **Register the number for 10DLC** (the carrier registration that 10-digit business numbers need before they can send automated texts). Until this is approved, patient texts do not send.
-
-Constraints from Solutionreach's own documentation:
-
-- One provisioned number per platform.
-- US and Canadian numbers only. Fax numbers can be provisioned.
-- Switching phone systems is optional. Solutionreach sells a VoIP phone system (SR Phones), but texting does not require it.
-
-### 2.3 What breaks, and how they handle it
-
-When the practice changes phone companies, the new company can overwrite the messaging record as part of moving the number. Solutionreach loses the route. Their release notes say messages can **look sent and never arrive** in this state. Their fix is a dashboard banner when they detect the change, a new LOA, and re-provisioning from inside the app.
-
-### 2.4 Why they moved off their short code
-
-Until 10/14/2022, Solutionreach sent automated review invitations from a 5-digit short code. They moved them to the office number for every practice that has Conversations, for two stated reasons:
-
-- A 5-digit sender looks like spam to patients.
-- A `STOP` sent to a shared short code opted the patient out of Solutionreach as a whole. A `STOP` sent to the office number opts them out of **that office only**.
-
-Practices without Conversations still get review texts from the short code.
-
----
-
-## 3. How the Market Does It
-
-| Vendor | What the patient sees | Voice | High-volume notifications |
-| :--- | :--- | :--- | :--- |
-| **Solutionreach** | Office number, once provisioned and 10DLC-registered | Stays with the practice's phone company | Office number if Conversations is on; short code otherwise |
-| **RevenueWell** | Office landline after a DocuSign LOA, usually live in 1–3 business days | Unchanged; hosting is SMS only | Some TCPA messages still use a 5-digit short code. If hosting fails, an assigned 10-digit number |
-| **NexHealth** | Office number, only if the current phone vendor releases the SMS rights | Stays with the phone vendor | Campaigns and review requests **always** use a different number |
-| **Dental Intelligence / Modento** | A verified toll-free number by default | Stays with the phone company | Toll-free, unless the practice completes a 10DLC upgrade (about 5–6 weeks after the number is connected). Hosted through Bandwidth |
-| **Weave** | Office number, through a full port or text-only SMS Hosting | Full port makes Weave the phone company; SMS Hosting does not | 10DLC registration, up to 10 days, then a chosen default texting number |
-| **Open Dental eServices** | A number from their pool, or the office landline through an emailed LOA | Unchanged | Same number; "not every landline is compatible" |
-
-RevenueWell documents the three usual reasons hosting is refused:
-
-1. The number's messaging route is **already hosted** by another texting vendor, so the practice must release it first.
-2. The number is **VoIP**, and most VoIP numbers can't be hosted.
-3. The number is **not a landline**. Telnyx, for example, rejects wireless numbers outright.
-
-**Takeaway:** no one in the market treats the office number as the *only* sender. Hosting fails often enough that every vendor keeps a number it controls.
-
----
-
-## 4. Where Daava Is Today
-
-As of `84bb5ea`:
-
-| Area | Current behaviour | Gap for office-number texting |
-| :--- | :--- | :--- |
-| **Sending** | `AwsSmsAdapter` (`lib/communication/adapters/aws-sms.ts`) publishes through Amazon SNS with a single origination identity from `AWS_SMS_ORIGINATION_NUMBER` or `AWS_SMS_SENDER_ID`. | There is one sender for the whole deployment. No per-clinic sender exists. |
-| **Intake auto-send** | `lib/intake/appointment-trigger/senders.ts` reads the same global origination number. Message bodies name the clinic and end with `Reply STOP to opt out.` | The clinic name appears in the text, but every clinic's texts come from the same number. |
-| **Inbound texts** | No code receives inbound SMS. | Addendum II §6 (v5.2) describes the two-way billing console as a planned function. It is not built. |
-| **Opt-outs** | Handled by AWS's default opt-out list on the origination number. | A `STOP` applies to the shared sender, so it silences every Daava practice for that patient, which is the problem Solutionreach fixed. |
-| **Provider choice** | Adapter pattern (`ISmsAdapter`) with SMS-to-email failover. | Adding a hosted-SMS provider fits as a second `ISmsAdapter`. The adapter pattern does not need to change. |
-
----
-
-## 5. Target Architecture
-
-### 5.1 Sending
-
-Every outbound text passes through one sender router. The router checks the opt-out ledger, then picks the short code or the practice's office number.
-
-```mermaid
-flowchart LR
-  EVT["Message request<br/>clinic · patient · type"] --> ROUTER{"Sender router"}
-  INBOX["Staff reply<br/>from two-way inbox"] --> ROUTER
-  OPT[("Consent & opt-out ledger<br/>per sender + patient")] -. "checked first" .-> ROUTER
-
-  ROUTER -- "notification, or office<br/>number not active" --> SC["Daava short code<br/>AWS End User Messaging"]
-  ROUTER -- "conversation, payment,<br/>or office number approved" --> OFF["Practice office number<br/>hosted SMS · 10DLC"]
-
-  SC --> PAT(["Patient's phone"])
-  OFF --> PAT
-
-  classDef aws fill:#fff4e5,stroke:#d9822b,color:#3a2200;
-  classDef host fill:#e9f7ef,stroke:#2e8b57,color:#0b2a17;
-  classDef core fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
-  classDef store fill:#f3eefb,stroke:#7a5ea8,color:#24123f;
-  classDef pat fill:#fff7e0,stroke:#b8860b,color:#3a2a00;
-  class SC aws;
-  class OFF host;
-  class EVT,ROUTER,INBOX core;
-  class OPT store;
-  class PAT pat;
-```
-
-### 5.2 Receiving and health
-
-Replies to either sender land in one inbound handler. Provider status events feed a health monitor that moves a clinic back to the short code when its office number loses the text route.
-
-```mermaid
-flowchart LR
-  PAT(["Patient's phone"]) --> SC["Daava short code"]
-  PAT --> OFF["Practice office number"]
-
-  SC -- "SNS two-way topic" --> INGEST["Inbound handler"]
-  OFF -- "signed webhook" --> INGEST
-
-  INGEST -- "STOP / START / HELP" --> OPT[("Consent & opt-out ledger")]
-  INGEST -- "everything else" --> INBOX["Two-way inbox<br/>front desk & billing"]
-
-  OFF -. "status events,<br/>delivery failures" .-> HEALTH["Sender health monitor"]
-  HEALTH -- "route lost" --> PROFILE[("Clinic sender profile<br/>fall back to short code")]
-  HEALTH -- "re-sign prompt" --> PM(["Practice manager"])
-
-  classDef aws fill:#fff4e5,stroke:#d9822b,color:#3a2200;
-  classDef host fill:#e9f7ef,stroke:#2e8b57,color:#0b2a17;
-  classDef core fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
-  classDef store fill:#f3eefb,stroke:#7a5ea8,color:#24123f;
-  classDef pat fill:#fff7e0,stroke:#b8860b,color:#3a2a00;
-  class SC aws;
-  class OFF host;
-  class INGEST,INBOX,HEALTH core;
-  class OPT,PROFILE store;
-  class PAT,PM pat;
-```
-
-### 5.3 Components
-
-| Component | Responsibility |
-| :--- | :--- |
-| **Clinic sender profile** | Per clinic, stores the office number, hosting provider, hosting status, 10DLC brand and campaign IDs, and LOA signed date. It replaces the single `AWS_SMS_ORIGINATION_NUMBER` value. Missing or unreadable profile fails closed, never borrowing another clinic's sender. |
-| **Sender router** | Chooses the sender for each message from the message type and the clinic's hosting status ([§6](#6-sender-routing-rules)). |
-| **Hosted-SMS adapter** | A second `ISmsAdapter` (for example `BandwidthSmsAdapter`) beside `AwsSmsAdapter`, with the same result and error shape. |
-| **Inbound handler** | Receives replies from both senders: the AWS two-way SNS topic for the short code, and signed webhooks for the hosted number. It records `STOP`, `START` and `HELP`, then routes everything else to the inbox. |
-| **Consent & opt-out ledger** | Keyed by **sender + patient phone**, so a `STOP` to one office number silences that office only. Self-managed opt-outs on the hosted number. |
-| **Two-way inbox** | Staff view of patient threads per clinic, which is the Addendum II §6 billing Q&A console. It sends replies through the office number. |
-| **Sender health monitor** | Watches provider status events and delivery receipts. When a hosted number loses its route, it flips the clinic back to the short code and alerts the practice to re-sign. |
-
----
-
-## 6. Sender Routing Rules
-
-| Message type | Office number **not** active | Office number active, 10DLC **pending** | Office number active, 10DLC **approved** |
-| :--- | :--- | :--- | :--- |
-| Intake link (auto-send) | Short code | Short code | Office number *(if Decision 2 says so)*, else short code |
-| Form reminders / last call | Short code | Short code | Office number *(if Decision 2 says so)*, else short code |
-| Kiosk / login verification code | Short code | Short code | Short code, always |
-| Balance / Pay-by-Link (Addendum II §6) | Short code | Short code | Office number |
-| Staff reply from the inbox | Not available | Not available | Office number |
-| Patient reply to the short code | Inbox, with an auto-response pointing to the office number when one exists | Same | Same |
-
-Verification codes stay on the short code permanently. They need throughput, not recognition, and a separate sender keeps a practice's `STOP` from blocking a patient's login.
-
----
-
-## 7. Practice Onboarding Flow
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor PM as Practice manager
-  participant D as Daava onboarding
-  participant H as Hosted-SMS provider
-  participant TCR as Campaign Registry & carriers
-  participant P as Patient phone
-
-  PM->>D: Request texting from office number
-  D->>H: Eligibility check
-  alt Not eligible (VoIP, wireless, already hosted)
-    H-->>D: Ineligible + reason
-    D-->>PM: Explain reason. Stay on short code.
-  else Eligible
-    H-->>D: Eligible
-    D->>PM: E-sign LOA + upload recent phone bill
-    PM-->>D: Signed LOA (valid 30 days)
-    D->>H: Create hosted-number order + documents
-    H->>PM: Ownership code sent to the office number
-    PM-->>D: Enter code
-    D->>H: Submit code
-    D->>TCR: Register practice brand (legal name, EIN, website) + campaign
-    H-->>D: Number provisioned (inbound live)
-    TCR-->>D: Campaign approved
-    D->>P: Test send from office number
-    P-->>D: Test reply received
-    D-->>PM: Office-number texting live
-  end
-```
-
-| Step | Owner | Typical time (vendor-published) |
-| :--- | :--- | :--- |
-| Eligibility check | Daava (API) | Instant |
-| LOA + phone bill | Practice manager | Same day if the bill is at hand |
-| Ownership verification | Practice manager | Minutes |
-| Hosting activation | Provider | 1–3 business days (Telnyx, RevenueWell) |
-| 10DLC brand + campaign | Daava as the registering platform | AWS lists campaign review as up to 4 weeks. Dental Intelligence quotes 5–6 weeks. Weave quotes up to 10 days. |
-
-The practice can receive texts on its office number as soon as hosting activates. Automated sending from that number waits for the campaign approval.
-
----
-
-## 8. Hosted Number Lifecycle
-
-```mermaid
-stateDiagram-v2
-  [*] --> Requested
-  Requested --> Ineligible: eligibility check fails
-  Requested --> AwaitingLOA: eligible
-  AwaitingLOA --> AwaitingLOA: LOA older than 30 days, re-sign
-  AwaitingLOA --> Provisioning: LOA + bill + ownership code accepted
-  Provisioning --> InboundOnly: route active, 10DLC pending
-  InboundOnly --> Active: campaign approved
-  Active --> RouteLost: practice changes phone company
-  InboundOnly --> RouteLost: practice changes phone company
-  RouteLost --> AwaitingLOA: practice re-signs LOA
-  Active --> Released: practice cancels or leaves Daava
-  Ineligible --> [*]
-  Released --> [*]
-
-  note right of RouteLost
-    Router falls back to the short code.
-    Practice sees a re-sign prompt.
-  end note
-```
-
-The **RouteLost** state is the failure Solutionreach and Dental Intelligence both document. The provider cannot prevent it. A new phone company's port can override the hosting record, and the original provider has to comply. Daava must detect it from provider events and delivery failures, rather than wait for a practice to notice that patients stopped replying.
-
----
-
-## 9. Compliance, Throughput and Cost
-
-### 9.1 Compliance requirements
-
-| Requirement | What it means for Daava |
-| :--- | :--- |
-| **Letter of Authorization** | Signed by the number's subscriber, listing the numbers, dated within 30 days of submission (Bandwidth, Telnyx). Store the signed copy with the clinic sender profile. |
-| **10DLC registration** | Each practice is a separate brand, registered with its legal name, EIN and website. The website must host a privacy policy and terms that cover texting (Dental Intelligence lists this as a requirement). Daava registers as the platform for every practice. |
-| **TCPA consent** | Already captured at intake ([Addendum II §6.1](./addendum_ii_clearinghouses_patient_payments_financing_tools.md)). The campaign's described opt-in flow must match what intake actually shows. |
-| **HIPAA BAA** | Bandwidth lists US 10DLC, toll-free and short-code SMS as HIPAA-eligible under its BAA. Telnyx offers a BAA through sales to customers above unpublished thresholds. Message bodies stay zero-PHI regardless. |
-| **Opt-out scope** | `STOP` to an office number applies to that practice only. `STOP` to the shared short code still applies to every practice on it, so shared-code bodies must name the clinic and the help reply must say how to reach the office. |
-
-### 9.2 Throughput
-
-| Sender | Published limit | Note |
-| :--- | :--- | :--- |
-| US short code | 100 message parts per second to start | Not under the 10DLC daily cap |
-| 10DLC office number | About 1.25 to 75 message parts per second per major carrier, set by campaign type and brand trust score | T-Mobile also caps outbound per **tax ID per day**: 2,000 at a low score, 10,000 at 25–49, 40,000 at 50–74, 200,000 at 75–100 |
-| Toll-free | 3 message parts per second | Buying more toll-free numbers to get past this is treated as snowshoeing and filtered |
-
-Practices that share an EIN share one T-Mobile daily bucket. A group-wide recall sent from several office numbers under one EIN draws from the same cap. That is one reason the short code should keep bulk notifications.
-
-### 9.3 Cost signals
-
-- **AWS short code:** $650 setup and $995 per month, with an estimated 12 weeks after the application is clean and no delivery SLA. US carrier short-code review pauses the weeks of 11/23/2026, 12/21/2026 and 12/28/2026.
-- **Office-number texting at competitors:** Dental Intelligence includes it for single-location practices and charges $30 per month for multi-location groups.
-- **Hosted-SMS carriers:** per-message and per-number pricing is quoted by sales. It has not been verified yet and is not used in this report.
-
----
-
-## 10. Decisions Needed
-
-| # | Decision | Options | Market reference |
-| :--- | :--- | :--- | :--- |
-| 1 | Approve a non-AWS messaging carrier for hosted SMS | **Bandwidth** (Dental Intelligence's carrier; BAA lists 10DLC) or **Telnyx** (full hosted-order API, BAA via sales). Twilio remains excluded by the Operations Manual. | Every vendor above uses a carrier that sells hosted messaging |
-| 2 | Move automated notifications to the office number once approved? | Yes, as Solutionreach does, or keep them on the short code, as Dental Intelligence and NexHealth do | Split |
-| 3 | Who signs up: Daava for every practice, or practice opt-in | Opt-in matches every vendor reviewed | All opt-in |
-| 4 | One office number per clinic, or per location group | Solutionreach allows one per platform | One per platform |
-
----
-
-## 11. Build Plan
-
-Phases are ordered by dependency. Each one is shippable on its own.
-
-```mermaid
-flowchart LR
-  P0["Phase 0<br/>Short code live<br/>(in flight)"]
-  P1["Phase 1<br/>Per-clinic senders,<br/>inbound + opt-out ledger"]
-  P2["Phase 2<br/>Hosted-SMS adapter<br/>+ onboarding"]
-  P3["Phase 3<br/>Health monitor<br/>+ fallback"]
-  P4["Phase 4<br/>Two-way inbox UI"]
-
-  P0 --> P1 --> P2 --> P3
-  P1 --> P4
-  P2 --> P4
-
+  MSG["Text to send"] --> LIVE{"Short code live?"}
+  LIVE -->|Yes| SC["Shared short code"]
+  LIVE -->|Not yet| FB["Toll-free or 10DLC"]
+  SC --> OK{"Delivered?"}
+  OK -->|Yes| DONE["Done"]
+  OK -->|No, or this plan blocks short codes| FB
+  FB --> STILL{"Delivered?"}
+  STILL -->|Yes| DONE
+  STILL -->|No| EMAIL["Email"]
+
+  classDef now fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
+  classDef fall fill:#fff4e5,stroke:#d9822b,color:#3a2200;
   classDef done fill:#e9f7ef,stroke:#2e8b57,color:#0b2a17;
-  classDef next fill:#e8f1fb,stroke:#3b6ea5,color:#0b2540;
-  classDef later fill:#f4f4f4,stroke:#8a8a8a,color:#222;
-  class P0 done;
-  class P1 next;
-  class P2,P3,P4 later;
+  class MSG,SC now;
+  class FB,EMAIL fall;
+  class DONE done;
 ```
 
-| Phase | Scope | Depends on |
-| :--- | :--- | :--- |
-| **0. Short code** | Finish AWS short-code registration. Route intake links, reminders and verification codes through it. | Already in progress |
-| **1. Per-clinic senders** | Clinic sender profile replacing the global origination number. Enable two-way SMS on the short code to an SNS topic. Inbound handler. Opt-out ledger keyed by sender + patient. | Phase 0 |
-| **2. Hosted SMS** | Decision 1. Provider account and BAA. Hosted-SMS adapter behind `ISmsAdapter`. Onboarding flow from §7 with LOA e-signature and document upload. 10DLC brand and campaign registration per practice. | Phase 1, Decision 1 |
-| **3. Health & fallback** | Provider status webhooks and delivery-failure detection. Automatic fallback to the short code on route loss. Practice re-sign prompt. | Phase 2 |
-| **4. Inbox** | Front-desk and billing inbox per clinic, which is the Addendum II §6 billing Q&A console. Built on design-system components. | Phases 1 and 2 |
-
-**Pilot first on Riversbend Dental**, the test clinic, using a test landline. No live clinic's number is hosted until the full lifecycle, including a simulated route loss, has passed there.
+Email failover already exists. The new piece is the second phone number, so a failed text has somewhere to go besides email.
 
 ---
 
-## 12. Risks
+## What each number is for
 
-| Risk | Impact | Mitigation |
-| :--- | :--- | :--- |
-| Practice's number is VoIP or already hosted by another texting vendor | Can't host. Practice is disappointed. | Eligibility check before promising anything. Short code remains the sender. Release instructions for the previous vendor. |
-| Practice changes phone company | Texts look sent but never arrive | Health monitor, automatic fallback, re-sign prompt (Phase 3) |
-| 10DLC campaign rejected | Office number receives texts but can't send automated ones | Campaign copy drafted from approved templates. Practice website privacy and terms checked before submitting. |
-| Practice already uses Solutionreach, Weave or another texting vendor | Only one vendor can host the number's texts at a time | Hosting Daava on the number cuts the other vendor off. The practice must choose, and this is said up front. |
-| Shared EIN across a group | T-Mobile daily cap shared across all its office numbers | Keep bulk notifications on the short code (Decision 2). Third-party vetting to raise the trust score. |
-| Non-AWS dependency | Breaks the AWS-only mandate | Isolated behind one adapter. Short code keeps working if the provider is down. |
+| | Shared short code | Toll-free or 10DLC fallback | Office number, later |
+| :--- | :--- | :--- | :--- |
+| **Job** | Notifications, reminders, verification codes | The same texts, when the short code cannot deliver them | Two-way chat from the number on the door |
+| **What the patient sees** | A 5- or 6-digit code | A 10-digit number, either 8xx or a local area code | The practice's real phone number |
+| **Speed** | 100 message parts per second | Toll-free: 3 per second. 10DLC: about 1.25 to 75 per second, set by the campaign | A per-practice cap, shared across offices on the same tax ID |
+| **Picture replies** | No. AWS does not accept incoming photos | No. Same AWS limit | Needs a carrier that accepts them. AWS does not |
+| **A STOP reply** | Stops texts from every Daava practice on that code | Stops texts from that number. Suggested rule below links the two | Stops texts from that practice only |
+| **When** | In progress | Suggested now, in parallel | Suggested after sending is live |
 
 ---
 
-## 13. Sources
+## Risks of sending on a short code
 
-All sources were accessed 11/20/2026.
+These are the reasons a short code by itself is a weak patient experience. The fallback number is the suggested cover for the first one. The others are accepted for now, and called out so the front desk is not surprised.
 
-**Solutionreach**
-- [SR Conversations FAQ](https://community.srhealth.com/s/article/SR-Conversations-FAQ)
-- [Release notes 10/14/2022: review invites moved from short code to office number](https://www.solutionreach.com/release-notes/release-notes-10-14-22)
-- [Release notes 12/02/2022: SPID change detection and re-provisioning](https://www.solutionreach.com/release-notes/release-notes-12-02-22)
-- [Pricing FAQ: switching phone systems is optional](https://www.solutionreach.com/pricing)
+1. **Some patients never receive it.** AWS documents that some prepaid plans, including some T-Mobile prepaid plans, do not accept short-code texts. Those patients get the fallback number, then email.
+2. **Patients do not recognize a 5- or 6-digit sender.** Solutionreach moved review texts off a short code for this reason, and said patients read it as a pharmacy or store alert. Every text should lead with the practice name.
+3. **One STOP applies to every practice.** A patient who replies STOP to the shared code stops texts from every Daava office. Suggested rule: one opt-out record per patient, checked before either number sends, so the fallback does not quietly re-text someone who already opted out.
+4. **Patients cannot text a photo back.** AWS End User Messaging accepts a text reply and does not accept an incoming picture. An insurance card or a photo of a tooth has to come through the intake link. This is true of the fallback number too, as long as both sit on AWS.
+5. **It is slow and fixed-cost.** Published AWS price is $650 to set up and $995 a month. About 12 weeks after the application is clean, with no delivery guarantee. US carrier review pauses the weeks of 11/23/2026, 12/21/2026, and 12/28/2026. The fallback number is what sends during those weeks.
+6. **Patients cannot call it.** Tapping a short code does not ring the desk.
 
-**Market**
-- [RevenueWell: Hosted SMS](https://help.revenuewell.com/hc/en-us/articles/4597745451803-Hosted-SMS)
-- [NexHealth: SMS registration and office-number hosting](https://help.nexhealth.com/en/articles/10046696-sms-registration)
-- [Dental Intelligence: office-number texting and 10DLC upgrade](https://educate.dentalintel.com/en/articles/9242560-porting-your-phone-number-for-inbound-sms-texting)
-- [Dental Intelligence: new LOA when a number is hosted away](https://educate.dentalintel.com/en/articles/13452299-why-you-need-a-new-loa-when-your-10dlc-number-is-hosted-away)
-- [Weave: port and SMS Hosting](https://www.weavehelp.com/weavehelp/article/port-your-phone-and-fax-number-s-to-weave)
-- [Open Dental webinar: eServices integrated texting](https://www.youtube.com/watch?v=i3peaNtIsZs)
+---
 
-**Carriers and AWS**
-- [Bandwidth: Hosted Messaging FAQ](https://www.bandwidth.com/support/en/articles/12823123-hosted-messaging-faq) · [LOAs](https://www.bandwidth.com/support/en/articles/12823124-hosted-messaging-loas) · [HIPAA-eligible services](https://www.bandwidth.com/support/en/articles/12823993-hipaa-eligible-products-and-services) · [Campaign API](https://dev.bandwidth.com/docs/messaging/campaign-management/csp/campaign-api.md)
-- [Telnyx: Hosted SMS](https://developers.telnyx.com/docs/messaging/messages/hosted-sms) · [HIPAA and BAAs](https://support.telnyx.com/en/articles/3347891-hipaa-baas-and-the-conduit-exception)
-- [AWS: choosing an origination identity](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-number-types.html) · [10DLC registration](https://docs.aws.amazon.com/sms-voice/latest/userguide/registrations-10dlc.html) · [two-way SMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/two-way-sms-phone-number.html) · [opt-out lists](https://docs.aws.amazon.com/sms-voice/latest/userguide/opt-out-list.html) · [short-code pricing](https://aws.amazon.com/sns/sms-pricing/) · [short-code freezes](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-numbers-request-short-code.html)
-- [AWS re:Post: End User Messaging does not port or host external numbers](https://repost.aws/questions/QUQaCxeYcvRtqIIYgYw068Bg/can-i-port-an-existing-us-number-into-aws-end-user-messaging-for-sms-not-just-voice)
-- [Twilio: T-Mobile 10DLC daily limits](https://help.twilio.com/articles/1260804800549-T-Mobile-daily-message-limits-for-long-code-messaging-with-A2P-10DLC) · [10DLC throughput by trust score](https://help.twilio.com/articles/1260803225669)
+## Suggested fallback: a toll-free or a 10DLC
+
+We need one of these. Both are new numbers AWS can issue. Neither is the office's existing line.
+
+| | Toll-free (8xx) | 10DLC (a 10-digit number we lease) |
+| :--- | :--- | :--- |
+| **Why consider it** | Dental Intelligence uses a verified toll-free as its default for automated texts. It reads as a business number more readily than 5 digits | A local area code, which is what Podium uses when it cannot host the office line |
+| **Limit** | 3 message parts per second. A reminder blast does not belong here | Throughput depends on campaign type and a trust score. T-Mobile also caps the day by tax ID: 2,000 segments at a low score, up to 200,000 at a high one |
+| **Opt-out** | On AWS, the carrier only honors STOP for a US toll-free | STOP, CANCEL, END, QUIT, UNSUBSCRIBE, and the other AWS keywords |
+| **Fit for this job** | A safety net and a bridge while the short code is in review | The same job, if we would rather the fallback look like a local phone |
+
+**Suggested pick:** a toll-free. The job is to reach the patient the short code missed, and a toll-free is the number Dental Intelligence already trusts for that kind of automated text. A 10DLC is the alternative if the fallback should look like a local phone number. That choice is an open question.
+
+**Risks of having the fallback:**
+
+- Patients may see two unfamiliar numbers. The practice name in the first line is what tells them who it is.
+- A STOP to one number does not stop the other unless we build that link. Without it, a patient can opt out of a reminder and get the same reminder from the second number.
+- The fallback is too slow for the morning blast. Use it for failures, for plans that block short codes, and for the period before the short code is live.
+- It still does not show the office's real number, and it still does not take photos.
+
+---
+
+## Suggested later: the practice's own number
+
+Solutionreach, RevenueWell, NexHealth, Emitrr, and OhMD text from the office number by **hosted SMS**. Weave often does it by becoming the phone company instead. Hosted SMS is the relevant one, because it leaves the desk phones alone.
+
+Voice calls and texts use different carrier records. A letter of authorization lets a messaging carrier take only the text record for that number. Calls stay with the practice's phone company. Patients then see the number on the door. Replies land in a staff inbox. A STOP applies to that practice only. Activation, when the number qualifies, is often 1 to 3 business days, and then the number still needs its own 10DLC campaign before automated texts can send.
+
+**Suggested timing:** after the short code and the fallback are sending. Reasons to wait:
+
+- It does not run on AWS. Bandwidth or Telnyx can do it. Twilio is outside the stack we use. That is an exception to the AWS-only rule, and it wants a written yes before anyone starts.
+- Wireless numbers cannot be hosted. Many VoIP numbers cannot. A number already texting through Solutionreach, RevenueWell, or a VoIP provider has to be released first, and hosting it on Daava turns the other vendor's texting off.
+- If the practice later changes phone companies, texting can stop with no alert. Messages look sent and never arrive. Solutionreach and RevenueWell both document this, and the suggested guard is a delivery alert plus a re-sign step.
+- Putting reminders and marketing on the same number means a STOP on a review request can also stop appointment texts. NexHealth keeps marketing on a separate number. That split is worth copying if we do this later.
+
+The research doc includes a cost model comparing Telnyx, Twilio, and a short code across 10, 50, and 100 clinics. Treat it as illustration. It uses list rates and a made-up message volume, and several of its prices need a carrier quote before they belong in a budget.
+
+---
+
+## Where sending is today
+
+Every text goes out from one AWS origination number. Intake texts name the practice and end with "Reply STOP to opt out." Nothing in the product receives a reply. Email can already take over when a text fails. Addendum II §6 describes the payment texts and the two-way billing console as planned.
+
+---
+
+## Suggested build plan
+
+1. **Keep the short code moving.** Leave the application in flight, and check it against the carrier freeze weeks.
+2. **Request the fallback in parallel.** One shared toll-free, or one shared 10DLC, so there is a number that can send before week 12 and a number that can reach prepaid plans.
+3. **Send in this order.** Short code when it is live. Fallback when the short code is not live, the send fails, or the plan is known to block short codes. Email after that.
+4. **One opt-out record per patient**, checked before either number sends. Practice name on the first line of every text.
+5. **No photo replies in this step.** Insurance cards and clinical photos stay on the intake link. Tell the front desk that a picture texted to either number will not arrive.
+6. **Office numbers as a follow-on suggestion**, after the two numbers above are delivering. Any pilot stays on the Riversbend test line.
+
+---
+
+## Open questions
+
+| # | Question | Answer |
+| :--- | :--- | :--- |
+| 1 | Toll-free or 10DLC for the fallback number? | |
+| 2 | One shared fallback number, or one per practice? | |
+| 3 | Should a STOP to either number stop both? | |
+| 4 | Has the short code application been submitted, and does the week of 11/23/2026 freeze it? | |
+| 5 | Are stakeholders comfortable that patients cannot text photos back on this step? | |
+| 6 | When should we ask practices about texting from their own office number? | |
+| 7 | | |
+| 8 | | |
+
+---
+
+## Sources
+
+Checked 11/20/2026. The research doc's own citation list is the long version. These are the ones this suggestion relies on.
+
+- [AWS: choosing an origination identity](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-number-types.html) (short code 100/sec, toll-free 3/sec, 8–12 weeks)
+- [AWS short-code price and timeline](https://aws.amazon.com/sns/sms-pricing/) ($650 setup, $995/month, about 12 weeks)
+- [AWS short-code guide](https://aws.amazon.com/blogs/messaging-and-targeting/guide-to-sms-short-codes-with-aws-end-user-messaging/) (no voice; some prepaid plans, including some T-Mobile prepaid plans, do not receive them)
+- [AWS: two-way SMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/two-way-sms-phone-number.html) (incoming photos are not supported)
+- [AWS: opt-out keywords](https://docs.aws.amazon.com/sms-voice/latest/userguide/keywords-required.html) (toll-free honors STOP only)
+- [AWS: requesting a short code, including 2026 freeze weeks](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-numbers-request-short-code.html)
+- [Solutionreach, 10/14/2022](https://www.solutionreach.com/release-notes/release-notes-10-14-22) (review texts moved off the short code so patients recognize the sender, and so STOP applies to one office)
+- [RevenueWell: Hosted SMS](https://help.revenuewell.com/hc/en-us/articles/4597745451803-Hosted-SMS) (voice unchanged; VoIP often ineligible; a phone-company change breaks texting)
+- [NexHealth: SMS registration](https://help.nexhealth.com/en/articles/10046696-sms-registration) (campaigns and reviews stay on a different number)
+- [Dental Intelligence: office-number texting](https://educate.dentalintel.com/en/articles/9242560-porting-your-phone-number-for-inbound-sms-texting) (verified toll-free is the default for automated texts)
