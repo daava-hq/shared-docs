@@ -10,7 +10,7 @@ Short texts go as SMS. Images and long texts go as MMS. They share one number an
 
 **SMS** is the reminder, the intake link, and "reply C." It is short. It arrives with mobile data off.
 
-**MMS** is the promotion image, a contact card, a calendar file, or a long text of up to 1,600 characters with no file attached. A long MMS is one message. It is not split the way a long SMS is.
+**MMS** is a long text of up to 1,600 characters with no file attached, or an image, a calendar file, or a map. A long MMS is one message. It is not split the way a long SMS is.
 
 **Receiving an image is the caveat.** Sending a picture and receiving one are different. AWS can send the image and can receive a text reply. It cannot receive a picture. A photo a patient texts back needs the number on Telnyx or Bandwidth. Carriers compress that photo on the way in, so a sharp insurance card still belongs on the intake page. [Section 6](#6-how-a-picture-gets-back-to-us).
 
@@ -38,8 +38,8 @@ flowchart TD
   Q -->|"A file, or a long text"| MMS["MMS"]
   SMS --> LAND["Arrives with mobile data off"]
   MMS --> DATA{"Cellular data on?"}
-  DATA -->|Yes| FILE["The file is in the thread"]
-  DATA -->|No| BACK["Send the SMS with the link"]
+  DATA -->|Yes| FILE["One message in the thread,<br/>text or file"]
+  DATA -->|No| BACK["Long text is resent as SMS.<br/>A picture uses the link."]
 
   classDef decisionNode fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#6d4c00
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
@@ -81,29 +81,29 @@ SMS does the daily work: the reminder, the intake link, and "reply C to confirm.
 | :--- | :--- | :--- |
 | **Reminders and intake links** have to arrive, including when the patient's data is off | This is the send. Practice name, the point, "Reply STOP to opt out," one short link. | It does not help. A picture of a reminder fails in the cases where the text would have arrived. |
 | **A confirmation the patient can answer**, the way Solutionreach does with C | The reply word. Each office keeps its own. | A calendar file in the same message, so the phone offers to add the visit. The reply is still the SMS word. |
-| **Patients recognize the office**, which is why the office-number report starts with the practice name and ends on the office's own number | The name on the first line, and later the office number itself. | A contact card, sent once, that saves the office number in one tap. Saving it is also what lets later SMS links show a preview on iPhone. |
+| **Patients recognize the office**, which is why the office-number report starts with the practice name and ends on the office's own number | The name on the first line, and later the office number itself. | MMS does not do this job. Recognition is the name, and later the office number. |
 | **A promotion that looks like an ad**, because patients are not in their email | A short text plus a link to the page that already has the promotion image. This is the version that reaches the whole list. | The image itself, in the thread. This is the MMS job. It fits a smaller send, a patient who already texts the office, or a welcome. The SMS with the link goes with it, so a phone that cannot fetch the picture still gets the offer. |
 | **Instructions that run past two texts**, such as pre-op or post-op | A link to the page. The page can be updated after the text goes out. | One MMS when the words themselves have to sit in the thread. Up to 1,600 characters, one charge, and past three SMS pieces it costs less. |
 | **A photo from the patient**, an insurance card or a picture of a concern | Cannot carry a file back. The intake page is how the photo arrives today. | The only way that photo lands in the thread. This waits until the office number is hosted on Telnyx or Bandwidth. AWS can send MMS and cannot receive one. |
 
 ```mermaid
 flowchart TD
-  SMS["SMS does the daily work:<br/>reminder, intake link, reply C"] --> MMS["MMS adds a file the text cannot hold"]
-  MMS --> CARD["Contact card, so the office number gets saved"]
-  CARD --> CAL["Calendar file with the confirmation"]
-  CAL --> PROMO["Promotion image, with the SMS link as backup"]
-  PROMO --> PHOTO["A photo the patient sends back,<br/>once the office number is hosted"]
+  SMS["SMS: a short text.<br/>Reminder, intake link, reply C"] --> MMS["MMS: a long text, or a file"]
+  MMS --> LONG["A long text, up to 1,600 characters,<br/>no file required"]
+  LONG --> PROMO["A promotion image,<br/>with the SMS link as backup"]
+  PROMO --> CAL["A calendar file with the confirmation"]
+  CAL --> PHOTO["A photo the patient sends back,<br/>once the number can receive it"]
 
   classDef actionNode fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
   classDef cleanNode fill:#dcfce7,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
 
   class SMS actionNode
-  class MMS,CARD,CAL,PROMO,PHOTO cleanNode
+  class MMS,LONG,CAL,PROMO,PHOTO cleanNode
 ```
 
 The promotion needs the most care, so it is worth being specific. A short text with one link is the right first send: it fits in 160 characters and reaches phones with data off. MMS is how the same promotion appears as a picture in the thread, for the sends where we want the image there and can accept that some phones will not fetch it. Those phones get the SMS. One message does not have to be chosen for every patient.
 
-A link preview is the in-between. A phone can show a small card for an SMS link, at SMS cost, when the link is the last thing in the text, the page is plain HTML, and the patient has already saved the number. That is a bonus for patients who saved the contact card. It is not a substitute for putting the image in the thread, because most first texts will not get the preview. The preview title stays generic. No patient name, visit type, or procedure in the title or the web address.
+A link preview is the in-between. A phone can show a small card for an SMS link, at SMS cost, when the link is the last thing in the text, the page is plain HTML, and the patient has already saved the number. It is not a substitute for putting the image in the thread, because most first texts will not get the preview. The preview title stays generic. No patient name, visit type, or procedure in the title or the web address.
 
 ---
 
@@ -113,11 +113,11 @@ These messages come from a toll-free number on AWS. That is the number, in place
 
 | MMS job | Toll-free on AWS | Office number, once hosted |
 | :--- | :--- | :--- |
-| Contact card, calendar file, map, promotion image | Yes, if the number's capabilities include MMS | Yes |
+| A long text, a promotion image, a calendar file, or a map | Yes, if the number's capabilities include MMS | Yes |
 | Photo back from the patient | No. AWS receives words only | Yes. This is the job that needs this number |
 | Speed for a picture | 3 a second. About 28 minutes for 5,000 | Set by the practice's registration. A large list also counts against T-Mobile's daily cap for that business |
 
-The contact card, the calendar file, and the promotion image go out from the toll-free. The photo a patient sends back waits for the office number. Until then, insurance cards and clinical photos come through the intake page.
+A long text, a calendar file, and the promotion image go out from the toll-free. The photo a patient sends back waits for the office number. Until then, insurance cards and clinical photos come through the intake page.
 
 Two checks before the first MMS on the toll-free. The capabilities column in AWS has to say MMS. Numbers bought after May 2024 include it, and the capability cannot be added later. And the verification samples have to include whatever we will send. A toll-free approved for reminders and intake links is not approved for a promotion.
 
@@ -133,9 +133,9 @@ A toll-free that is allowed to send both can send a reminder as SMS in the morni
 
 ```mermaid
 flowchart TD
-  NUM["One toll-free"] --> OUT{"Does this send have a file?"}
-  OUT -->|No| SMS["SMS: reminder, intake link, reply C"]
-  OUT -->|Yes| MMS["MMS: the promotion image, a contact card, a calendar file"]
+  NUM["One toll-free"] --> OUT{"What is going out?"}
+  OUT -->|"A short text"| SMS["SMS: reminder, intake link, reply C"]
+  OUT -->|"A long text, or a file"| MMS["MMS: up to 1,600 characters,<br/>with or without a file"]
   SMS --> THREAD["One conversation on the patient's phone"]
   MMS --> THREAD
   THREAD --> BACK{"What comes back?"}
@@ -200,7 +200,7 @@ Solutionreach is the one the offices are comparing against, and its published tw
 **An MMS**, for the four jobs in [section 3](#3-where-mms-helps-what-we-are-building):
 
 1. The same practice name and the same STOP line. The file does not replace them.
-2. The file is a contact card, a calendar file, a map, or the promotion image. Shrink an image to 500 KB or under. Carriers recompress anything larger. AWS accepts an image up to 2 MB and other files up to 600 KB. The safe size across carriers is about 600 KB.
+2. A long text can go with no file. A file, when there is one, is a calendar file, a map, or the promotion image. Shrink an image to 500 KB or under. Carriers recompress anything larger. AWS accepts an image up to 2 MB and other files up to 600 KB. The safe size across carriers is about 600 KB.
 3. On AWS, the file has to sit in an S3 bucket in the same account and region as the sending number. The send uses the media call, not the text call.
 4. The SMS with the link goes out whenever the picture does not land.
 5. A picture the patient sends back is copied into Daava's own storage as it arrives. On Telnyx the link in the incoming notice expires quickly.
@@ -212,9 +212,9 @@ Nothing clinical goes in either one. A text and a picture are both readable on a
 ## 8. Suggested build
 
 1. **SMS first, in the SMS composer.** A shortener, a counter that says "1 text" or "2 texts," and a warning on an emoji or a curly quote.
-2. **MMS as a choice on the same template**, for a contact card, a calendar file, a map, or the promotion image. Choosing it still sends the SMS with the link when the picture does not arrive.
+2. **MMS as a choice on the same template**, for a long text, a calendar file, a map, or the promotion image. A long text needs no file. Choosing a picture still sends the SMS with the link when the picture does not arrive.
 3. **The Invisalign promotion text is the SMS trial.** Its image, sent as MMS to the test line beside that text, is the MMS trial. One practice, the test number, then the sample practice for a click-through.
-4. **The first real MMS to patients is the contact card**, sent when an office starts texting from its own number, so the number gets saved.
+4. **The first MMS to patients is a long text or that promotion image**, on the test line.
 5. **One inbox and one inbound hook for the number.** A text reply is stored now. A photo is stored once the number is on Telnyx or Bandwidth. Until then the intake page remains the way a card or a clinical photo comes in.
 6. **Any live test stays on the test line.**
 
@@ -225,12 +225,11 @@ Nothing clinical goes in either one. A text and a picture are both readable on a
 | # | Question | Answer |
 | :--- | :--- | :--- |
 | 1 | For the Invisalign promotion, do we send the SMS with the link to the list, and the MMS image to a smaller set, with the SMS as the backup? | |
-| 2 | Is the contact card the first MMS patients receive, sent when an office moves to its own number? | |
-| 3 | Should a confirmation include a calendar file? | |
-| 4 | Do photo replies wait for the hosted office number, with the intake page still there beside them? | |
-| 5 | Does the toll-free show MMS in its capabilities, and do its samples include a promotion? | |
-| 6 | Has Daava accepted the AWS business associate agreement that covers MMS? | |
-| 7 | Does the toll-free stay on AWS, where a photo reply cannot arrive, until an office number is hosted? Or does its messaging move to Telnyx or Bandwidth so picture replies work on the toll-free? | |
+| 2 | Should a confirmation include a calendar file? | |
+| 3 | Do photo replies wait for the hosted office number, with the intake page still there beside them? | |
+| 4 | Does the toll-free show MMS in its capabilities, and do its samples include a promotion? | |
+| 5 | Has Daava accepted the AWS business associate agreement that covers MMS? | |
+| 6 | Does the toll-free stay on AWS, where a photo reply cannot arrive, until an office number is hosted? Or does its messaging move to Telnyx or Bandwidth so picture replies work on the toll-free? | |
 
 ---
 
