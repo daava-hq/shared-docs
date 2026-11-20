@@ -2,10 +2,18 @@
 
 - **Date:** 11/20/2026
 - **Status:** Suggestion for review. Not a build commitment.
-- **For:** Jaime Kirk, Opal Anderson, and the practice stakeholders
+- **For:** Practice stakeholders and product
 - **Research:** [DSO Two-Way Texting Architecture](https://docs.google.com/document/d/1FVjLhQ24BnyQC6zGS9DUdjUafkfJ03Loa-z8H_P7nyM) (Gemini deep research, shared 11/20/2026). Code checked against `daava-hq/daava-ai` `main` @ `84bb5ea`.
 
-This report is about one thing: sending and receiving patient texts from the phone number already printed for that practice. Solutionreach does this. The suggestion is to start patients on a toll-free number this month, then move each office onto its own number as that number clears.
+Sending from the office's own number is the goal. Solutionreach does it, which is why patients recognize the text. A normal toll-free is what we test with while each office number is reviewed. The fallback is required, because an office number can be ineligible or can lose its text route without a failed send.
+
+**How the office number sends a text.** The practice keeps its phone company. Calls still ring the desk. A messaging carrier takes only the text route for that same number, after the practice signs a letter. The patient sees the office number. A reply lands in Daava, not on the desk phone. Detail is in [section 2](#2-how-an-office-number-sends-a-text).
+
+**How we get there.** AWS cannot host a number the practice already owns. Telnyx or Bandwidth can. Each number is checked, the ones that qualify are hosted, and a carrier campaign is registered under that practice. [Sections 4](#4-vendors) through [6](#6-setting-up-each-office-number).
+
+**What we test with now.** A toll-free on AWS. It is an ordinary 10-digit number, not a 5-digit short code. It is enough to test reminders, intake links, and replies before any office number is ready. [Section 5](#5-setting-up-the-toll-free).
+
+**Why the fallback is required.** Some numbers will not qualify. A number that does qualify can lose its text route when the practice changes phone companies, and the send can still look successful. The path is the office number, then the toll-free, then email. Without the toll-free, those offices have no text. [Section 7](#7-the-fallback).
 
 | | Section |
 | :--- | :--- |

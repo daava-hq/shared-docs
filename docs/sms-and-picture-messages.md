@@ -6,11 +6,15 @@
 - **Research:** [MMS vs. SMS Message Delivery and AWS End User Messaging MMS Guide](https://docs.google.com/document/d/13mVnaKqz_W9B68DCmsRI6tNhBxUxAY1n2moa8fjpEXY)
 - **Related:** [`office-number-texting-report.md`](./office-number-texting-report.md) is about which number the message comes from. This guide is about the two kinds of message, and which jobs need the picture kind.
 
-Daava is trying to do what the offices already get from Solutionreach: reminders, a confirmation the patient can answer, an intake link, and a promotion that looks like an ad rather than another email. Those are two different kinds of phone message.
+Short texts go as SMS. Images and long texts go as MMS. They share one number and one thread. The patient sees one conversation.
 
-**SMS** is the text. It holds 160 characters, a link, and a reply such as C. **MMS** is the message in the same thread that can carry a file, or a much longer text that does not split. A promotion that is a picture cannot be sent as a plain text, because a plain text cannot hold an image.
+**SMS** is the reminder, the intake link, and "reply C." It is short. It arrives with mobile data off.
 
-The suggestion is to use both, for different jobs. SMS carries the messages that have to arrive. MMS is how the picture, the contact card, the calendar file, and a photo from the patient get into that same thread.
+**MMS** is the promotion image, a contact card, a calendar file, or a long text of up to 1,600 characters with no file attached. A long MMS is one message. It is not split the way a long SMS is.
+
+**Receiving an image is the caveat.** Sending a picture and receiving one are different. AWS can send the image and can receive a text reply. It cannot receive a picture. A photo a patient texts back needs the number on Telnyx or Bandwidth. Carriers compress that photo on the way in, so a sharp insurance card still belongs on the intake page. [Section 6](#6-how-a-picture-gets-back-to-us).
+
+Solutionreach already collects those pictures in its two-way thread. Weave does too. The comparison is in [section 6](#6-how-a-picture-gets-back-to-us).
 
 ---
 
@@ -169,6 +173,18 @@ What this does not replace: the intake page. Carriers compress a photo on the wa
 
 Until that carrier is in place, the toll-free on AWS can run the SMS conversation and send the MMS ad. It cannot store a photo a patient sends back.
 
+### What the other platforms do with pictures
+
+| Platform | Pictures in the text thread |
+| :--- | :--- |
+| **Solutionreach** | Patients can text images of insurance info, treatment progress, and injuries. Staff view and download the attachments in the conversation. |
+| **Weave** | The app downloads images sent and received. The App Store version history lists an update that added video and PDF over MMS, and the app can send up to three images in one message. |
+| **RevenueWell** | Messenger receives MMS from patients. It does not send media. |
+| **NexHealth** | Staff can attach pictures in the message thread. Patient-sent photos are not called out on the product page. |
+| **Dental Intelligence** | Two-way text is documented. Images are not. |
+
+Solutionreach is the one the offices are comparing against, and its published two-way texting includes images both ways. That is the bar for the inbox, and it is the part AWS cannot do.
+
 ---
 
 ## 7. How a message gets written
@@ -226,5 +242,7 @@ Checked 11/20/2026.
 - [AWS: MMS file types and size](https://docs.aws.amazon.com/sms-voice/latest/userguide/mms-limitations-character.html) (1,600 characters, not split) and [sending an MMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/send-mms-message.html) (a text-only MMS is sent by leaving the file off)
 - [AWS: throughput](https://docs.aws.amazon.com/sms-voice/latest/userguide/sms-limitations-mps.html) (an MMS is one part, 3 a second on a toll-free)
 - [AWS: How to send MMS](https://aws.amazon.com/blogs/messaging-and-targeting/how-to-send-mms-using-aws-end-user-messaging/) (no inbound pictures; numbers bought after May 2024 include MMS; a long text MMS sent to a phone that cannot receive MMS is redirected to SMS) and [two-way SMS](https://docs.aws.amazon.com/sms-voice/latest/userguide/two-way-sms.html) ("Two-way MMS is not supported, but your phone number can still receive incoming SMS messages in response to an outbound MMS message.")
+- [Solutionreach: two-way texting](https://www.solutionreach.com/platform/solutions-overview/two-way-texting) (patients send images of insurance info, progress, and injuries) and [Weave on the App Store](https://apps.apple.com/us/app/weave-text-call-schedule/id1030476630) (images both ways; a later update added video and PDF)
+- [RevenueWell: Messenger](https://help.revenuewell.com/hc/en-us/articles/5347727811611-Messenger) (receives MMS from patients, does not send media) and [NexHealth messaging](https://www.nexhealth.com/resources/introducing-the-new-nexhealth) (staff attach pictures)
 - [Telnyx: receive SMS and MMS](https://developers.telnyx.com/docs/messaging/messages/receive-message) (one webhook, the notice says SMS or MMS, media links last 30 days) and [MMS media limits](https://developers.telnyx.com/docs/messaging/messages/mms-transcoding) (US and Canada toll-free, long code, and short code; download the file on arrival)
 - [Bandwidth: toll-free MMS FAQ](https://www.bandwidth.com/support/en/articles/12823248-toll-free-mms-faq) (same locations send and receive, including a hosted toll-free; STOP is shared; outbound files up to 525 KB) and [webhooks](https://dev.bandwidth.com/docs/messaging/webhooks/) (one inbound hook, channel is SMS or MMS, download media within 2 days)
